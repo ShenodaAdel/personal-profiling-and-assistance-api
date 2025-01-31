@@ -1,0 +1,6 @@
+@Personal_Profiling_And_Assistance_HostAddress = http://localhost:5117
+
+GET {{Personal_Profiling_And_Assistance_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
