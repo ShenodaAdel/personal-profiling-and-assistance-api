@@ -1,4 +1,4 @@
-using BusinessLogic.ServerConfigration;
+using BusinessLogic.ServicesConfigrations;
 
 var builder = WebApplication.CreateBuilder(args);
 
