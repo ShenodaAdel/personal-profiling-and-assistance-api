@@ -14,7 +14,7 @@ namespace BusinessLogic.DTOs
         public string Password { get; set; }
         public byte[]? ProfilePicture { get; set; }
 
-        public string Phone { get; set; }
-        public Char Gender { get; set; }
+        public string? Phone { get; set; }
+        public string? Gender { get; set; }
     }
 }

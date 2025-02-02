@@ -25,14 +25,12 @@ namespace BusinessLogic.Services.Implementation
         {
             // Validate required fields
             if (string.IsNullOrEmpty(dto.Name) ||
-                string.IsNullOrEmpty(dto.Email) ||
-                string.IsNullOrEmpty(dto.Phone))
-
+                string.IsNullOrEmpty(dto.Email))
             {
                 return new ResultDto
                 {
                     HasError = true,
-                    ErrorMessage = "Name, Email, and Phone are required fields",
+                    ErrorMessage = "Name, Email are required fields",
                     NotFound = false
                 };
             }
