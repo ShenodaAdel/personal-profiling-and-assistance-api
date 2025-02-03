@@ -13,13 +13,13 @@ namespace Data.Models
         public int Id { get; set; }
         [Column(TypeName = "nvarchar(100)")]
         public required string Name { get; set; }
-        [MaxLength(200)]
+        [MaxLength(200),EmailAddress]
         public required string Email { get; set; }
         [MaxLength(500)]
         public required string Password { get; set; } // Hashed
         [MaxLength(5 * 1024 * 1024)] // 5MB
         public byte[]? ProfilePicture { get; set; }
-        [MaxLength(1)]
+        [MaxLength(50)]
         public string? Gender { get; set; } // M or F
         [MaxLength(11)]
         public string? Phone { get; set; }
