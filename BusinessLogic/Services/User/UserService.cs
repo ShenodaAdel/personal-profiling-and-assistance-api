@@ -1,5 +1,4 @@
-﻿using BusinessLogic.Services.Interfaces;
-using BusinessLogic.DTOs;
+﻿using BusinessLogic.DTOs;
 using Data;
 using System;
 using System.Collections.Generic;
@@ -10,7 +9,7 @@ using Data.Models;
 using Microsoft.EntityFrameworkCore;
 using BCrypt.Net;
 
-namespace BusinessLogic.Services.Implementation
+namespace BusinessLogic.Services.User
 {
     public class UserService : IUserService
     {
@@ -21,7 +20,7 @@ namespace BusinessLogic.Services.Implementation
             _context = context;
         }
 
-        public async Task<ResultDto> AddUserAsync(UserDto dto)
+        public async Task<ResultDto> AddUserAsync(UserAddDto dto)
         {
             // Validate required fields
             if (string.IsNullOrEmpty(dto.Name) ||
@@ -30,9 +29,8 @@ namespace BusinessLogic.Services.Implementation
             {
                 return new ResultDto
                 {
-                    HasError = true,
+                    Success = true,
                     ErrorMessage = "Name, Email and password are required fields",
-                    NotFound = false
                 };
             }
 
@@ -47,14 +45,13 @@ namespace BusinessLogic.Services.Implementation
                 {
                     return new ResultDto
                     {
-                        HasError = true,
+                        Success = true,
                         ErrorMessage = "User with this email or phone already exists",
-                        NotFound = false
                     };
                 }
 
                 // Map DTO to User entity
-                var user = new User
+                var user = new Data.Models.User
                 {
                     Name = dto.Name,
                     Email = dto.Email,
@@ -71,26 +68,23 @@ namespace BusinessLogic.Services.Implementation
                 {
                     return new ResultDto
                     {
-                        Result = user,
-                        HasError = false,
-                        NotFound = false
+                        Data = user,
+                        Success = false,
                     };
                 }
 
                 return new ResultDto
                 {
-                    HasError = true,
-                    ErrorMessage = "Failed to save user",
-                    NotFound = false
+                    Success = true,
+                    ErrorMessage = "Failed to save user",                
                 };
             }
             catch (Exception ex)
             {
                 return new ResultDto
                 {
-                    HasError = true,
+                    Success = true,
                     ErrorMessage = ex.Message,
-                    NotFound = false
                 };
             }
         }
@@ -111,9 +105,8 @@ namespace BusinessLogic.Services.Implementation
             {
                 return new ResultDto
                 {
-                    HasError = true,
+                    Success = true,
                     ErrorMessage = "User not found",
-                    NotFound = true
                 };
             }
 
@@ -126,26 +119,23 @@ namespace BusinessLogic.Services.Implementation
                 {
                     return new ResultDto
                     {
-                        Result = user,
-                        HasError = false,
-                        NotFound = false
+                        Data = user,
+                        Success = false,
                     };
                 }
 
                 return new ResultDto
                 {
-                    HasError = true,
+                    Success = true,
                     ErrorMessage = "Failed to delete user",
-                    NotFound = false
                 };
             }
             catch (Exception ex)
             {
                 return new ResultDto
                 {
-                    HasError = true,
+                    Success = true,
                     ErrorMessage = ex.Message,
-                    NotFound = false
                 };
             }
         }
@@ -160,16 +150,14 @@ namespace BusinessLogic.Services.Implementation
             {
                 return new ResultDto
                 {
-                    HasError = false,
-                    NotFound = true
+                    Success = false,           
                 };
             }
 
             return new ResultDto
             {
-                Result = users,
-                HasError = false,
-                NotFound = false
+                Data = users,
+                Success = false,
             };
         }
 
@@ -182,9 +170,8 @@ namespace BusinessLogic.Services.Implementation
             {
                 return new ResultDto
                 {
-                    HasError = true,
+                    Success = true,
                     ErrorMessage = "Invalid user ID. ID must be a positive number.",
-                    NotFound = false
                 };
             }
 
@@ -200,14 +187,13 @@ namespace BusinessLogic.Services.Implementation
                 {
                     return new ResultDto
                     {
-                        NotFound = true,
-                        HasError = false,
+                        Success = false,
                         ErrorMessage = $"User with ID {id} not found."
                     };
                 }
 
                 // Map to safe DTO (exclude password)
-                var userResponse = new UserDto 
+                var userResponse = new 
                 {
                     Id = user.Id,
                     Name = user.Name,
@@ -219,9 +205,8 @@ namespace BusinessLogic.Services.Implementation
 
                 return new ResultDto
                 {
-                    Result = userResponse,
-                    HasError = false,
-                    NotFound = false
+                    Data = userResponse,
+                    Success = false,
                 };
             }
             catch (Exception ex)
@@ -229,9 +214,9 @@ namespace BusinessLogic.Services.Implementation
                 // Handle unexpected errors
                 return new ResultDto
                 {
-                    HasError = true,
+                    Success = true,
                     ErrorMessage = $"An error occurred: {ex.Message}",
-                    NotFound = false
+                
                 };
             }
         }
@@ -240,7 +225,7 @@ namespace BusinessLogic.Services.Implementation
 
         public async Task<ResultDto> UpdateUserAsync(int id, UserDto dto)
         {
-            User? user = await _context.Users.Where(u => u.Id == id).SingleOrDefaultAsync();
+            var user = await _context.Users.Where(u => u.Id == id).SingleOrDefaultAsync();
             if (user != null)
             {
                 try
@@ -265,24 +250,21 @@ namespace BusinessLogic.Services.Implementation
                         {
                             return new ResultDto
                             {
-                                Result = user,
-                                NotFound = false,
-                                HasError = false,
+                                Data = user,
+                                Success = false,
                             };
                         }
 
                         return new ResultDto
                         {
-                            NotFound = false,
-                            HasError = true,
+                            Success = true,
                             ErrorMessage = "User Not Updated.",
                         };
                     }
 
                     return new ResultDto
                     {
-                        NotFound = false,
-                        HasError = true,
+                        Success = true,
                         ErrorMessage = "Phone Number or Email Address are Already Exist",
                     };
                 }
@@ -290,8 +272,7 @@ namespace BusinessLogic.Services.Implementation
                 {
                     return new ResultDto
                     {
-                        NotFound = false,
-                        HasError = true,
+                        Success = true,
                         ErrorMessage = ex.Message
                     };
                 }
@@ -299,8 +280,7 @@ namespace BusinessLogic.Services.Implementation
 
             return new ResultDto
             {
-                NotFound = true,
-                HasError = false,
+                Success = false,
             };
         }
 

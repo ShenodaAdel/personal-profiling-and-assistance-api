@@ -5,14 +5,14 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace BusinessLogic.Services.Interfaces
+namespace BusinessLogic.Services.Question
 {
     public interface IQuestionService
     {
-        Task<ResultDto> AddQuestionAsync(QuestionDto dto);
+        Task<ResultDto> AddQuestionAsync(QuestionAddDto dto);
         Task<ResultDto> DeleteQuestionAsync(int id);
         Task<ResultDto> GetAllQuestionsAsync();
         Task<ResultDto> GetQuestionByIdAsync(int id);
-        Task<ResultDto> UpdateQuestionAsync(int id, QuestionDto dto);
+        Task<ResultDto> UpdateQuestionAsync(int id, Data.Models.Question dto);
     }
 }

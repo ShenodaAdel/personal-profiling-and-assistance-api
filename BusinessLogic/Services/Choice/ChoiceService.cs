@@ -1,5 +1,4 @@
 ﻿using BusinessLogic.DTOs;
-using BusinessLogic.Services.Interfaces;
 using Data;
 using Data.Models;
 using System;
@@ -8,7 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace BusinessLogic.Services.Implementation
+namespace BusinessLogic.Services.Choice
 {
     public class ChoiceService : IChoiceService
     {
@@ -19,18 +18,18 @@ namespace BusinessLogic.Services.Implementation
             _context = context;
         }
 
-        public async Task<ResultDto> AddChoiceAsync(ChoiceDto dto)
+        public async Task<ResultDto> AddChoiceAsync(ChoiceAddDto dto)
         {
             // Validate the input (e.g., ensure Content is not empty)
             if (string.IsNullOrWhiteSpace(dto.Content))
             {
                 return new ResultDto
                 {
-                    HasError = true,
+                    Success = true,
                     ErrorMessage = "Content cannot be empty."
                 };
             }
-            var choice = new Choice
+            var choice = new Data.Models.Choice
             {
                 Content = dto.Content
             };
@@ -41,15 +40,13 @@ namespace BusinessLogic.Services.Implementation
             {
                 return new ResultDto
                 {
-                    Result = choice,
-                    NotFound = false,
-                    HasError = false
+                    Data = choice,
+                    Success = false
                 };
             }
             return new ResultDto
             {
-                NotFound = false,
-                HasError = true,
+                Success = true,
                 ErrorMessage = "Choice could not be added."
             };
         }
@@ -62,8 +59,7 @@ namespace BusinessLogic.Services.Implementation
             {
                 return new ResultDto
                 {
-                    NotFound = true,
-                    HasError = true,
+                    Success = true,
                     ErrorMessage = "Choice not found."
                 };
             }
@@ -73,28 +69,25 @@ namespace BusinessLogic.Services.Implementation
             {
                 return new ResultDto
                 {
-                    Result = choice,
-                    NotFound = false,
-                    HasError = false
+                    Data = choice,
+                    Success = false
                 };
             }
             return new ResultDto
             {
-                NotFound = false,
-                HasError = true,
+                Success = true,
                 ErrorMessage = "Choice could not be deleted."
             };
         }
         // End of DeleteChoiceAsync method
-        public async Task<ResultDto> UpdateChoiceAsync(int id, ChoiceDto dto)
+        public async Task<ResultDto> UpdateChoiceAsync(int id, Data.Models.Choice dto)
         {
             var choice = await _context.Choices.FindAsync(id);
             if (choice == null)
             {
                 return new ResultDto
                 {
-                    NotFound = true,
-                    HasError = true,
+                    Success = true,
                     ErrorMessage = "Choice not found."
                 };
             }
@@ -104,7 +97,7 @@ namespace BusinessLogic.Services.Implementation
             {
                 return new ResultDto
                 {
-                    HasError = true,
+                    Success = true,
                     ErrorMessage = "Content cannot be empty."
                 };
             }
@@ -117,16 +110,14 @@ namespace BusinessLogic.Services.Implementation
             {
                 return new ResultDto
                 {
-                    Result = choice,
-                    NotFound = false,
-                    HasError = false
+                    Data = choice,
+                    Success = false
                 };
             }
 
             return new ResultDto
             {
-                NotFound = false,
-                HasError = true,
+                Success = true,
                 ErrorMessage = "Choice could not be updated."
             };
         }
@@ -140,16 +131,14 @@ namespace BusinessLogic.Services.Implementation
             {
                 return new ResultDto
                 {
-                    NotFound = true,
-                    HasError = true,
+                    Success = true,
                     ErrorMessage = "Choice not found."
                 };
             }
             return new ResultDto
             {
-                Result = choice,
-                NotFound = false,
-                HasError = false
+                Data = choice,
+                Success = false
             };
         }
 
@@ -160,9 +149,8 @@ namespace BusinessLogic.Services.Implementation
             var choices = _context.Choices.ToList();
             return new ResultDto
             {
-                Result = choices,
-                NotFound = false,
-                HasError = false
+                Data = choices,
+                Success = false
             };
         }
 

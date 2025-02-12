@@ -4,11 +4,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace BusinessLogic.DTOs
+namespace BusinessLogic.Services.Question
 {
-    public class QuestionDto
+    public class QuestionAddDto
     {
-        public int Id { get; set; }
         public string Content { get; set; }
     }
 }

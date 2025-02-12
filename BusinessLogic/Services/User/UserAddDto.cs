@@ -4,17 +4,16 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace BusinessLogic.DTOs
+namespace BusinessLogic.Services.User
 {
-    public class UserDto
+    public class UserAddDto
     {
-        public int Id { get; set; }
         public string Name { get; set; }
         public string Email { get; set; }
         public string Password { get; set; }
         public byte[]? ProfilePicture { get; set; }
+        public string? Gender { get; set; }
 
         public string? Phone { get; set; }
-        public string? Gender { get; set; }
     }
 }
