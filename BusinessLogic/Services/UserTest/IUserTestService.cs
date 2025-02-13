@@ -1,0 +1,22 @@
+﻿using BusinessLogic.DTOs;
+using BusinessLogic.Services.UserTest.Dtos;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace BusinessLogic.Services.UserTest
+{
+    public interface IUserTestService
+    {
+        Task<ResultDto> AddUserTestAsync(UserTestDto dto);
+
+        Task<ResultDto> UpdateUserTestAsync(int id, UserTestDto dto);
+        Task<ResultDto> DeleteUserTestAsync(int id);
+        
+        Task<ResultDto> GetUserTestByIdAsync(int id);
+        Task<ResultDto> GetAllUserTestsAsync();
+        
+    }
+}
