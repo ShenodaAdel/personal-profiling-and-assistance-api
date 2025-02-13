@@ -69,7 +69,7 @@ namespace BusinessLogic.Services.User
                     return new ResultDto
                     {
                         Data = user,
-                        Success = false,
+                        Success = true,
                     };
                 }
 
@@ -83,7 +83,7 @@ namespace BusinessLogic.Services.User
             {
                 return new ResultDto
                 {
-                    Success = true,
+                    Success = false,
                     ErrorMessage = ex.Message,
                 };
             }
@@ -120,7 +120,7 @@ namespace BusinessLogic.Services.User
                     return new ResultDto
                     {
                         Data = user,
-                        Success = false,
+                        Success = true,
                     };
                 }
 
@@ -134,7 +134,7 @@ namespace BusinessLogic.Services.User
             {
                 return new ResultDto
                 {
-                    Success = true,
+                    Success = false,
                     ErrorMessage = ex.Message,
                 };
             }
@@ -157,7 +157,7 @@ namespace BusinessLogic.Services.User
             return new ResultDto
             {
                 Data = users,
-                Success = false,
+                Success = true,
             };
         }
 
@@ -170,7 +170,7 @@ namespace BusinessLogic.Services.User
             {
                 return new ResultDto
                 {
-                    Success = true,
+                    Success = false,
                     ErrorMessage = "Invalid user ID. ID must be a positive number.",
                 };
             }
@@ -206,7 +206,7 @@ namespace BusinessLogic.Services.User
                 return new ResultDto
                 {
                     Data = userResponse,
-                    Success = false,
+                    Success = true,
                 };
             }
             catch (Exception ex)
@@ -214,7 +214,7 @@ namespace BusinessLogic.Services.User
                 // Handle unexpected errors
                 return new ResultDto
                 {
-                    Success = true,
+                    Success = false,
                     ErrorMessage = $"An error occurred: {ex.Message}",
                 
                 };
@@ -251,7 +251,7 @@ namespace BusinessLogic.Services.User
                             return new ResultDto
                             {
                                 Data = user,
-                                Success = false,
+                                Success = true,
                             };
                         }
 
@@ -272,7 +272,7 @@ namespace BusinessLogic.Services.User
                 {
                     return new ResultDto
                     {
-                        Success = true,
+                        Success = false,
                         ErrorMessage = ex.Message
                     };
                 }

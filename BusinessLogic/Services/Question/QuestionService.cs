@@ -46,18 +46,20 @@ namespace BusinessLogic.Services.Question
                 return new ResultDto
                 {
                     Data = question,
-                    Success = false
+                    Success = true
                 };
             }
 
             return new ResultDto
             {
-                Success = true,
+                Success = false,
                 ErrorMessage = "Question could not be added."
             };
         }
 
         // End of AddQuestionAsync method
+
+        // must ada new check if the new question is already in the database or not
 
         public async Task<ResultDto> DeleteQuestionAsync(int id)
         {
@@ -79,14 +81,14 @@ namespace BusinessLogic.Services.Question
             {
                 return new ResultDto
                 {
-                    Success = false,
+                    Success = true,
                     Data = "Question deleted successfully."
                 };
             }
 
             return new ResultDto
             {  
-                Success = true,
+                Success = false,
                 ErrorMessage = "Question could not be deleted."
             };
         }
@@ -129,13 +131,13 @@ namespace BusinessLogic.Services.Question
                 return new ResultDto
                 {
                     Data = question,
-                    Success = false
+                    Success = true
                 };
             }
 
             return new ResultDto
             {
-                Success = true,
+                Success = false,
                 ErrorMessage = "Question could not be updated."
             };
         }
@@ -159,7 +161,7 @@ namespace BusinessLogic.Services.Question
             return new ResultDto
             {
                 Data = question,
-                Success = false
+                Success = true
             };
         }
 
@@ -174,7 +176,7 @@ namespace BusinessLogic.Services.Question
             {
                 Data = questions,
                 
-                Success = false
+                Success = true
             }
                 : new ResultDto
                 {

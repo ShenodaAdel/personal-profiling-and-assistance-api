@@ -56,13 +56,13 @@ namespace BusinessLogic.Services.Test
                 return new ResultDto
                 {
                     Data = test,
-                    Success = false
+                    Success = true
                 };
             }
 
             return new ResultDto
             {
-                Success = true,
+                Success = false,
                 ErrorMessage = "Test could not be added."
             };
         }
@@ -97,7 +97,7 @@ namespace BusinessLogic.Services.Test
                 {
                     return new ResultDto
                     {
-                        Success = false,
+                        Success = true,
                         Data = "Test deleted successfully."
                     };
                 }
@@ -112,7 +112,7 @@ namespace BusinessLogic.Services.Test
             {
                 return new ResultDto
                 {
-                    Success = true,
+                    Success = false,
                     ErrorMessage = ex.Message
                 };
             }
@@ -168,7 +168,7 @@ namespace BusinessLogic.Services.Test
                     return new ResultDto
                     {
                         Data = test,
-                        Success = false
+                        Success = true
                     };
                 }
 
@@ -182,7 +182,7 @@ namespace BusinessLogic.Services.Test
             {
                 return new ResultDto
                 {
-                    Success = true,
+                    Success = false,
                     ErrorMessage = ex.Message
                 };
             }
@@ -200,7 +200,7 @@ namespace BusinessLogic.Services.Test
             {
                 return new ResultDto
                 {
-                    Success = true,
+                    Success = false,
                     ErrorMessage = "Test not found."
                 };
             }
@@ -209,7 +209,7 @@ namespace BusinessLogic.Services.Test
             return new ResultDto
             {
                 Data = test,
-                Success = false
+                Success = true
             };
         }
 
@@ -225,7 +225,7 @@ namespace BusinessLogic.Services.Test
                 ? new ResultDto
                 {
                     Data = tests,
-                    Success = false
+                    Success = true
                 }
                 : new ResultDto
                 {
