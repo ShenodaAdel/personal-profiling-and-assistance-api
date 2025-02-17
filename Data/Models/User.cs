@@ -12,7 +12,8 @@ namespace Data.Models
     {
         public int Id { get; set; }
         [Column(TypeName = "nvarchar(100)")]
-        public required string Name { get; set; }
+        public required string Name
+        { get; set; }
         [MaxLength(200),EmailAddress]
         public required string Email { get; set; }
         [MaxLength(500)]

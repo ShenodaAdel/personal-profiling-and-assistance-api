@@ -1,4 +1,5 @@
 ﻿using BusinessLogic.DTOs;
+using BusinessLogic.Services.User.Dtos;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,6 +14,10 @@ namespace BusinessLogic.Services.User
         Task<ResultDto> DeleteUserByIdAsync(int id);
         Task<ResultDto> GetAllUserAsync();
         Task<ResultDto> GetByIdUserAsync(int id);
-        Task<ResultDto> UpdateUserAsync(int id, UserDto dto);
+        Task<ResultDto> UpdateUserAsync(int id, Data.Models.User dto);
+
+        Task<ResultDto> RegisterAsync(UserRegisterDto dto);
+
+        Task<ResultDto> LoginAsync(UserLoginDto dto);
     }
 }

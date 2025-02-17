@@ -8,16 +8,23 @@ using System.Threading.Tasks;
 using Data.Models;
 using Microsoft.EntityFrameworkCore;
 using BCrypt.Net;
+using BusinessLogic.Services.User.Dtos;
+using Microsoft.IdentityModel.Tokens;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using Microsoft.Extensions.Configuration;
 
 namespace BusinessLogic.Services.User
 {
     public class UserService : IUserService
     {
         private readonly MyDbContext _context;
+        private readonly IConfiguration _configuration;
 
         public UserService(MyDbContext context)
         {
             _context = context;
+            _configuration = configuration;
         }
 
         public async Task<ResultDto> AddUserAsync(UserAddDto dto)
@@ -223,7 +230,7 @@ namespace BusinessLogic.Services.User
 
         // End of GetByIdUserAsync method
 
-        public async Task<ResultDto> UpdateUserAsync(int id, UserDto dto)
+        public async Task<ResultDto> UpdateUserAsync(int id, Data.Models.User dto)
         {
             var user = await _context.Users.Where(u => u.Id == id).SingleOrDefaultAsync();
             if (user != null)
@@ -285,5 +292,113 @@ namespace BusinessLogic.Services.User
         }
 
         // End of UpdateUserAsync method
+
+        public async Task<ResultDto> RegisterAsync(UserRegisterDto dto)
+        {
+            // Validate required fields
+            if (string.IsNullOrEmpty(dto.Name) ||
+                string.IsNullOrEmpty(dto.Email) || string.IsNullOrEmpty(dto.Password))
+            {
+                return new ResultDto
+                {
+                    Success = false,
+                    ErrorMessage = "Name, Email and password are required fields",
+                };
+            }
+            try
+            {
+                // Check if email already exists
+                var exists = await _context.Users.AnyAsync(u => u.Email == dto.Email);
+                if (exists)
+                {
+                    return new ResultDto
+                    {
+                        Success = false,
+                        ErrorMessage = "User with this email already exists",
+                    };
+                }
+                // Map DTO to User entity
+                var user = new Data.Models.User
+                {
+                    Name = dto.Name,
+                    Email = dto.Email,
+                    Password = HashPassword(dto.Password) // Don't forget to hash the password!
+                };
+                await _context.Users.AddAsync(user);
+                var saveResult = await _context.SaveChangesAsync();
+                if (saveResult > 0)
+                {
+                    return new ResultDto
+                    {
+                        Data = user,
+                        Success = true,
+                    };
+                }
+                return new ResultDto
+                {
+                    Success = false,
+                    ErrorMessage = "Failed to save user",
+                };
+            }
+            catch (Exception ex)
+            {
+                return new ResultDto
+                {
+                    Success = false,
+                    ErrorMessage = ex.Message,
+                };
+            }
+        }
+
+        // End of RegisterAsync method
+
+        public async Task<ResultDto> LoginAsync(UserLoginDto dto)
+        {
+            var user = await _context.Users.SingleOrDefaultAsync(u => u.Email == dto.Email);
+            if (user == null || !VerifyPassword(dto.Password, user.Password))
+            {
+                return new ResultDto
+                {
+                    Success = false,
+                    ErrorMessage = "Invalid email or password."
+                };
+            }
+
+            var token = GenerateJwtToken(user);
+
+            return new ResultDto
+            {
+                Success = true,
+                Data = new { Token = token }
+            };
+        }
+
+        private bool VerifyPassword(string password, string hashedPassword)
+        {
+            return BCrypt.Net.BCrypt.Verify(password, hashedPassword);
+        }
+
+        private string GenerateJwtToken(Data.Models.User user)
+        {
+            var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));
+            var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
+
+            var claims = new[]
+            {
+                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+                new Claim(ClaimTypes.Name, user.Name),
+                new Claim(ClaimTypes.Email, user.Email)
+            };
+
+            var token = new JwtSecurityToken(
+                _configuration["Jwt:Issuer"],
+                _configuration["Jwt:Audience"],
+                claims,
+                expires: DateTime.UtcNow.AddHours(2),
+                signingCredentials: credentials);
+
+            return new JwtSecurityTokenHandler().WriteToken(token);
+        }
+
     }
 }
