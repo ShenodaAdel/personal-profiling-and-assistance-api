@@ -12,6 +12,10 @@ namespace Data.Models
     {
         public int Id { get; set; }
         [Column(TypeName = "nvarchar(100)")]
+
+        // i need to add migration in home 18 / 9 2025 
+        [MaxLength(50)]
+        public string Role { get; set; } = "User"; // Admin, User
         public required string Name
         { get; set; }
         [MaxLength(200),EmailAddress]

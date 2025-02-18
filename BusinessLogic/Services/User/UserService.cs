@@ -20,6 +20,7 @@ namespace BusinessLogic.Services.User
     {
         private readonly MyDbContext _context;
         private readonly IConfiguration _configuration;
+        private IConfiguration? configuration;
 
         public UserService(MyDbContext context)
         {
@@ -61,6 +62,7 @@ namespace BusinessLogic.Services.User
                 var user = new Data.Models.User
                 {
                     Name = dto.Name,
+                    Role = dto.Role,
                     Email = dto.Email,
                     Phone = dto.Phone,
                     Gender = dto.Gender,
@@ -322,6 +324,7 @@ namespace BusinessLogic.Services.User
                 {
                     Name = dto.Name,
                     Email = dto.Email,
+                    Role = "User",
                     Password = HashPassword(dto.Password) // Don't forget to hash the password!
                 };
                 await _context.Users.AddAsync(user);
@@ -387,7 +390,8 @@ namespace BusinessLogic.Services.User
             {
                 new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
                 new Claim(ClaimTypes.Name, user.Name),
-                new Claim(ClaimTypes.Email, user.Email)
+                new Claim(ClaimTypes.Email, user.Email),
+                new Claim(ClaimTypes.Role, user.Role)
 
             };
 
