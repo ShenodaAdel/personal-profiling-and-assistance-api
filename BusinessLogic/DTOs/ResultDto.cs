@@ -7,10 +7,10 @@ using System.Threading.Tasks;
 namespace BusinessLogic.DTOs
 {
     public class ResultDto
-    {
-        public object? Result { get; set; }
-        public bool NotFound { get; set; }
-        public bool HasError { get; set; }
+     {
+        public object? Data { get; set; }
+        public bool Success { get; set; }
+        public int? Code { get; set; }
         public string? ErrorMessage { get; set; }
     }
 }

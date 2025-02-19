@@ -1,4 +1,8 @@
+using BusinessLogic.Extensions;
+using BusinessLogic.Services.User;
 using BusinessLogic.ServicesConfigrations;
+using Data;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -8,9 +12,20 @@ string? connectionString = builder.Configuration.GetConnectionString("DefaultCon
 builder.Services.ApplicationContextConfigurator(connectionString);
 
 builder.Services.AddControllers();
+
+builder.Services.AddScoped<IUserService, UserService>();
+
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
+    });
+
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+builder.Services.AddCustomJwtAuth(builder.Configuration);
 
 var app = builder.Build();
 
@@ -22,6 +37,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.UseAuthentication();
 
 app.UseAuthorization();
 

@@ -5,14 +5,14 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace BusinessLogic.Services.Interfaces
+namespace BusinessLogic.Services.Test
 {
     public interface ITestService
     {
-        Task<ResultDto> AddTestAsync(TestDto dto);
+        Task<ResultDto> AddTestAsync(TestAddDto dto);
         Task<ResultDto> DeleteTestAsync(int id);
         Task<ResultDto> GetAllTestsAsync();
         Task<ResultDto> GetTestByIdAsync(int id);
-        Task<ResultDto> UpdateTestAsync(int id, TestDto dto);
+        Task<ResultDto> UpdateTestAsync(int id, Data.Models.Test dto);
     }
 }

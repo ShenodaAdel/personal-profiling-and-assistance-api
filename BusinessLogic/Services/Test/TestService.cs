@@ -1,5 +1,4 @@
 ﻿using BusinessLogic.DTOs;
-using BusinessLogic.Services.Interfaces;
 using Data;
 using Data.Models;
 using Microsoft.EntityFrameworkCore;
@@ -9,7 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace BusinessLogic.Services.Implementation
+namespace BusinessLogic.Services.Test
 {
     public class TestService : ITestService
     {
@@ -20,15 +19,14 @@ namespace BusinessLogic.Services.Implementation
             _context = context;
         }
 
-        public async Task<ResultDto> AddTestAsync(TestDto dto)
+        public async Task<ResultDto> AddTestAsync(TestAddDto dto)
         {
             // Validate if Name is not empty
             if (string.IsNullOrWhiteSpace(dto.Name))
             {
                 return new ResultDto
-                {
-                    NotFound = false,
-                    HasError = true,
+                { 
+                    Success = true,
                     ErrorMessage = "Test Name cannot be empty."
                 };
             }
@@ -39,14 +37,13 @@ namespace BusinessLogic.Services.Implementation
             {
                 return new ResultDto
                 {
-                    NotFound = false,
-                    HasError = true,
+                    Success = true,
                     ErrorMessage = "Test Name already exists in the database."
                 };
             }
 
             // If validations pass, add the new test
-            var test = new Test
+            var test = new Data.Models.Test
             {
                 Name = dto.Name
             };
@@ -58,16 +55,14 @@ namespace BusinessLogic.Services.Implementation
             {
                 return new ResultDto
                 {
-                    Result = test,
-                    NotFound = false,
-                    HasError = false
+                    Data = test,
+                    Success = true
                 };
             }
 
             return new ResultDto
             {
-                NotFound = false,
-                HasError = true,
+                Success = false,
                 ErrorMessage = "Test could not be added."
             };
         }
@@ -84,8 +79,7 @@ namespace BusinessLogic.Services.Implementation
             {
                 return new ResultDto
                 {
-                    NotFound = true,
-                    HasError = true,
+                    Success = true,
                     ErrorMessage = "Test not found."
                 };
             }
@@ -103,16 +97,14 @@ namespace BusinessLogic.Services.Implementation
                 {
                     return new ResultDto
                     {
-                        NotFound = false,
-                        HasError = false,
-                        Result = "Test deleted successfully."
+                        Success = true,
+                        Data = "Test deleted successfully."
                     };
                 }
 
                 return new ResultDto
                 {
-                    NotFound = false,
-                    HasError = true,
+                    Success = true,
                     ErrorMessage = "Test could not be deleted."
                 };
             }
@@ -120,8 +112,7 @@ namespace BusinessLogic.Services.Implementation
             {
                 return new ResultDto
                 {
-                    NotFound = false,
-                    HasError = true,
+                    Success = false,
                     ErrorMessage = ex.Message
                 };
             }
@@ -129,7 +120,7 @@ namespace BusinessLogic.Services.Implementation
 
         // End of DeleteTestAsync method
 
-        public async Task<ResultDto> UpdateTestAsync(int id, TestDto dto)
+        public async Task<ResultDto> UpdateTestAsync(int id, Data.Models.Test dto)
         {
             // Find the test by Id
             var test = await _context.Tests.FindAsync(id);
@@ -139,8 +130,7 @@ namespace BusinessLogic.Services.Implementation
             {
                 return new ResultDto
                 {
-                    NotFound = true,
-                    HasError = true,
+                    Success = true,
                     ErrorMessage = "Test not found."
                 };
             }
@@ -152,8 +142,7 @@ namespace BusinessLogic.Services.Implementation
                 {
                     return new ResultDto
                     {
-                        NotFound = false,
-                        HasError = true,
+                        Success = true,
                         ErrorMessage = "Test Name cannot be empty."
                     };
                 }
@@ -164,8 +153,7 @@ namespace BusinessLogic.Services.Implementation
                 {
                     return new ResultDto
                     {
-                        NotFound = false,
-                        HasError = true,
+                        Success = true,
                         ErrorMessage = "Test Name already exists in the database."
                     };
                 }
@@ -179,16 +167,14 @@ namespace BusinessLogic.Services.Implementation
                 {
                     return new ResultDto
                     {
-                        Result = test,
-                        NotFound = false,
-                        HasError = false
+                        Data = test,
+                        Success = true
                     };
                 }
 
                 return new ResultDto
                 {
-                    NotFound = false,
-                    HasError = true,
+                    Success = true,
                     ErrorMessage = "Test could not be updated."
                 };
             }
@@ -196,8 +182,7 @@ namespace BusinessLogic.Services.Implementation
             {
                 return new ResultDto
                 {
-                    NotFound = false,
-                    HasError = true,
+                    Success = false,
                     ErrorMessage = ex.Message
                 };
             }
@@ -215,8 +200,7 @@ namespace BusinessLogic.Services.Implementation
             {
                 return new ResultDto
                 {
-                    NotFound = true,
-                    HasError = true,
+                    Success = false,
                     ErrorMessage = "Test not found."
                 };
             }
@@ -224,9 +208,8 @@ namespace BusinessLogic.Services.Implementation
             // Return the test if found
             return new ResultDto
             {
-                Result = test,
-                NotFound = false,
-                HasError = false
+                Data = test,
+                Success = true
             };
         }
 
@@ -241,15 +224,13 @@ namespace BusinessLogic.Services.Implementation
             return tests.Any()
                 ? new ResultDto
                 {
-                    Result = tests,
-                    NotFound = false,
-                    HasError = false
+                    Data = tests,
+                    Success = true
                 }
                 : new ResultDto
                 {
-                    NotFound = true,
-                    HasError = false,
-                    ErrorMessage = "No tests found." 
+                    Success = false,
+                    ErrorMessage = "No tests found."
                 };
         }
 
