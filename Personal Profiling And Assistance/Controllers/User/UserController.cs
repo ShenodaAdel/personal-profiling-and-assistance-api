@@ -1,4 +1,5 @@
-﻿using BusinessLogic.Services.User;
+﻿using BusinessLogic.DTOs;
+using BusinessLogic.Services.User;
 using BusinessLogic.Services.User.Dtos;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -10,24 +11,37 @@ namespace Personal_Profiling_And_Assistance.Controllers.User
     [ApiController]
     public class UserController : ControllerBase
     {
-        private readonly UserService _userService;
-        public UserController(UserService userService)
+        private readonly IUserService _userService;
+        public UserController(IUserService userService)
         {  
             _userService = userService;
         }
 
         [HttpPost("Register")]
-        public async Task<IActionResult> Register( [FromBody] UserRegisterDto dto)
+        public async Task<IActionResult> Register([FromBody] UserRegisterDto dto)
         {
-            // Ensure the registration role is always "User" (no admin can register another user)
+            if (!ModelState.IsValid)
+            {
+                var errorMessage = ModelState.Values
+                    .SelectMany(v => v.Errors)
+                    .Select(e => e.ErrorMessage)
+                    .FirstOrDefault();
+
+                return BadRequest(new ResultDto
+                {
+                    Success = false,
+                    ErrorMessage = errorMessage ?? "Invalid request data"
+                });
+            }
+
             var result = await _userService.RegisterAsync(dto);
 
             if (result.Success)
             {
-                return Ok(result);  // Return success message if registration is successful
+                return Ok(result);
             }
 
-            return BadRequest(result);  // Return error message if registration fails
+            return BadRequest(result);
         }
 
     }

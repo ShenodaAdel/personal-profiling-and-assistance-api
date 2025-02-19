@@ -20,7 +20,7 @@ namespace BusinessLogic.Services.User
     {
         private readonly MyDbContext _context;
         private readonly IConfiguration _configuration;
-        private IConfiguration? configuration;
+        private IConfiguration configuration;
 
         public UserService(MyDbContext context)
         {
@@ -304,6 +304,8 @@ namespace BusinessLogic.Services.User
                 return new ResultDto
                 {
                     Success = false,
+                    Data = null ,
+                    Code = null ,
                     ErrorMessage = "Name, Email and password are required fields",
                 };
             }
@@ -316,6 +318,8 @@ namespace BusinessLogic.Services.User
                     return new ResultDto
                     {
                         Success = false,
+                        Data = null,
+                        Code = null,
                         ErrorMessage = "User with this email already exists",
                     };
                 }
@@ -335,11 +339,15 @@ namespace BusinessLogic.Services.User
                     {
                         Data = user,
                         Success = true,
+                        Code = null ,
+                        ErrorMessage = null
                     };
                 }
                 return new ResultDto
                 {
                     Success = false,
+                    Data = null,
+                    Code = null,
                     ErrorMessage = "Failed to save user",
                 };
             }
@@ -348,6 +356,8 @@ namespace BusinessLogic.Services.User
                 return new ResultDto
                 {
                     Success = false,
+                    Data = null,
+                    Code = null,
                     ErrorMessage = ex.Message,
                 };
             }
