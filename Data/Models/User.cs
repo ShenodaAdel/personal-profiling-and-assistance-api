@@ -16,6 +16,7 @@ namespace Data.Models
         // i need to add migration in home 18 / 9 2025 
         [MaxLength(50)]
         public string Role { get; set; } = "User"; // Admin, User
+        [MaxLength(100)]
         public required string Name
         { get; set; }
         [MaxLength(200),EmailAddress]
