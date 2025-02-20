@@ -1,4 +1,5 @@
 using BusinessLogic.Extensions;
+using BusinessLogic.Services.Test;
 using BusinessLogic.Services.User;
 using BusinessLogic.ServicesConfigrations;
 using Data;
@@ -14,11 +15,12 @@ builder.Services.ApplicationContextConfigurator(connectionString);
 builder.Services.AddControllers();
 
 builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<ITestService, TestService>();
 
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
-        options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
+        options.JsonSerializerOptions.PropertyNameCaseInsensitive = true; 
     });
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle

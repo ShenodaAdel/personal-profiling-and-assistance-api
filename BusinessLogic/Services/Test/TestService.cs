@@ -26,7 +26,7 @@ namespace BusinessLogic.Services.Test
             {
                 return new ResultDto
                 { 
-                    Success = true,
+                    Success = false,
                     ErrorMessage = "Test Name cannot be empty."
                 };
             }
@@ -37,7 +37,7 @@ namespace BusinessLogic.Services.Test
             {
                 return new ResultDto
                 {
-                    Success = true,
+                    Success = false,
                     ErrorMessage = "Test Name already exists in the database."
                 };
             }
@@ -55,7 +55,11 @@ namespace BusinessLogic.Services.Test
             {
                 return new ResultDto
                 {
-                    Data = test,
+                    Data = new
+                    {
+                        test.Id,
+                        test.Name
+                    },
                     Success = true
                 };
             }
@@ -79,7 +83,7 @@ namespace BusinessLogic.Services.Test
             {
                 return new ResultDto
                 {
-                    Success = true,
+                    Success = false,
                     ErrorMessage = "Test not found."
                 };
             }
@@ -98,13 +102,17 @@ namespace BusinessLogic.Services.Test
                     return new ResultDto
                     {
                         Success = true,
-                        Data = "Test deleted successfully."
+                        Data = new
+                        {
+                            test.Id,
+                            test.Name
+                        }
                     };
                 }
 
                 return new ResultDto
                 {
-                    Success = true,
+                    Success = false,
                     ErrorMessage = "Test could not be deleted."
                 };
             }
@@ -120,7 +128,7 @@ namespace BusinessLogic.Services.Test
 
         // End of DeleteTestAsync method
 
-        public async Task<ResultDto> UpdateTestAsync(int id, Data.Models.Test dto)
+        public async Task<ResultDto> UpdateTestAsync(int id, TestAddDto dto)
         {
             // Find the test by Id
             var test = await _context.Tests.FindAsync(id);
@@ -130,7 +138,7 @@ namespace BusinessLogic.Services.Test
             {
                 return new ResultDto
                 {
-                    Success = true,
+                    Success = false,
                     ErrorMessage = "Test not found."
                 };
             }
@@ -142,7 +150,7 @@ namespace BusinessLogic.Services.Test
                 {
                     return new ResultDto
                     {
-                        Success = true,
+                        Success = false,
                         ErrorMessage = "Test Name cannot be empty."
                     };
                 }
@@ -153,7 +161,7 @@ namespace BusinessLogic.Services.Test
                 {
                     return new ResultDto
                     {
-                        Success = true,
+                        Success = false,
                         ErrorMessage = "Test Name already exists in the database."
                     };
                 }
@@ -167,7 +175,11 @@ namespace BusinessLogic.Services.Test
                 {
                     return new ResultDto
                     {
-                        Data = test,
+                        Data = new
+                        {
+                            test.Id,
+                            test.Name
+                        },
                         Success = true
                     };
                 }
@@ -193,7 +205,14 @@ namespace BusinessLogic.Services.Test
         public async Task<ResultDto> GetTestByIdAsync(int id)
         {
             // Find the test by Id
-            var test = await _context.Tests.FindAsync(id);
+            var test = await _context.Tests
+             .Where(t => t.Id == id)  // Filter by ID first
+             .Select(t => new
+             {
+                t.Id,
+                t.Name
+             })
+             .FirstOrDefaultAsync();
 
             // If the test doesn't exist, return an error
             if (test == null)
@@ -218,7 +237,11 @@ namespace BusinessLogic.Services.Test
         public async Task<ResultDto> GetAllTestsAsync()
         {
             // Retrieve all tests from the database
-            var tests = await _context.Tests.ToListAsync();
+            var tests = await _context.Tests.Select(t => new
+            {
+                t.Id,
+                t.Name
+            }).ToListAsync();
 
             // Return an empty list with a success result if no tests are found
             return tests.Any()

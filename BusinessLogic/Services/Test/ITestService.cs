@@ -13,6 +13,6 @@ namespace BusinessLogic.Services.Test
         Task<ResultDto> DeleteTestAsync(int id);
         Task<ResultDto> GetAllTestsAsync();
         Task<ResultDto> GetTestByIdAsync(int id);
-        Task<ResultDto> UpdateTestAsync(int id, Data.Models.Test dto);
+        Task<ResultDto> UpdateTestAsync(int id, TestAddDto dto);
     }
 }

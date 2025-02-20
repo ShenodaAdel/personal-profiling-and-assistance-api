@@ -13,6 +13,8 @@ using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using Microsoft.Extensions.Configuration;
+using BusinessLogic.Services.User.DTOs;
+using Microsoft.AspNetCore.Identity;
 
 namespace BusinessLogic.Services.User
 {
@@ -114,7 +116,7 @@ namespace BusinessLogic.Services.User
             {
                 return new ResultDto
                 {
-                    Success = true,
+                    Success = false,
                     ErrorMessage = "User not found",
                 };
             }
@@ -128,14 +130,20 @@ namespace BusinessLogic.Services.User
                 {
                     return new ResultDto
                     {
-                        Data = user,
+                        Data = new
+                        {
+                            user.Id,
+                            user.Name,
+                            user.Email,
+                            user.Role
+                        },
                         Success = true,
                     };
                 }
 
                 return new ResultDto
                 {
-                    Success = true,
+                    Success = false,
                     ErrorMessage = "Failed to delete user",
                 };
             }
@@ -151,9 +159,18 @@ namespace BusinessLogic.Services.User
 
         // // End of DeleteUserByIdAsync method
 
-        public async Task<ResultDto> GetAllUserAsync()
+        public async Task<ResultDto> GetAllUserAsync() 
         {
-            var users = await _context.Users.ToListAsync();
+            var users = await _context.Users.Select(u => new
+            {
+                u.Id,
+                u.Name,
+                u.Email,
+                u.Gender,
+                u.ProfilePicture,
+                u.Phone
+
+            }).ToListAsync();
 
             if (users.Count == 0)
             {
@@ -168,7 +185,7 @@ namespace BusinessLogic.Services.User
                 Data = users,
                 Success = true,
             };
-        }
+        }  
 
         // End of GetAllUserAsync method
 
@@ -209,6 +226,7 @@ namespace BusinessLogic.Services.User
                     Email = user.Email,
                     Phone = user.Phone,
                     Gender = user.Gender,
+                    RoleManager = user.Role,
                     ProfilePicture = user.ProfilePicture
                 };
 
@@ -337,7 +355,12 @@ namespace BusinessLogic.Services.User
                 {
                     return new ResultDto
                     {
-                        Data = user,
+                        Data = new
+                        {
+                            Name = user.Name,
+                            Email = user.Email,
+                            Role = user.Role
+                        },
                         Success = true,
                         Code = null ,
                         ErrorMessage = null
