@@ -17,7 +17,7 @@ namespace BusinessLogic.Services.Test
         public TestService(MyDbContext context)
         {
             _context = context;
-        }
+        } 
 
         public async Task<ResultDto> AddTestAsync(TestAddDto dto)
         {

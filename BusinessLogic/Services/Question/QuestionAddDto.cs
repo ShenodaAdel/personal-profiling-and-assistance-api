@@ -8,6 +8,8 @@ namespace BusinessLogic.Services.Question
 {
     public class QuestionAddDto
     {
-        public string Content { get; set; }
+        public string? Content { get; set; }
+
+        public int? TestId { get; set; }
     }
 }

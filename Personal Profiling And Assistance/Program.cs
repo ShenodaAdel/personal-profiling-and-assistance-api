@@ -1,6 +1,9 @@
 using BusinessLogic.Extensions;
+using BusinessLogic.Services.Question;
+using BusinessLogic.Services.QuestionChoice;
 using BusinessLogic.Services.Test;
 using BusinessLogic.Services.User;
+using BusinessLogic.Services.UserTest;
 using BusinessLogic.ServicesConfigrations;
 using Data;
 using Microsoft.EntityFrameworkCore;
@@ -16,6 +19,8 @@ builder.Services.AddControllers();
 
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<ITestService, TestService>();
+builder.Services.AddScoped<IUserTestService,UserTestService>();
+builder.Services.AddScoped<IQuestionService, QuestionService>();
 
 builder.Services.AddControllers()
     .AddJsonOptions(options =>

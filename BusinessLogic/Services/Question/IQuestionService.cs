@@ -13,6 +13,6 @@ namespace BusinessLogic.Services.Question
         Task<ResultDto> DeleteQuestionAsync(int id);
         Task<ResultDto> GetAllQuestionsAsync();
         Task<ResultDto> GetQuestionByIdAsync(int id);
-        Task<ResultDto> UpdateQuestionAsync(int id, Data.Models.Question dto);
+        Task<ResultDto> UpdateQuestionAsync(int id, QuestionAddDto dto);
     }
 }

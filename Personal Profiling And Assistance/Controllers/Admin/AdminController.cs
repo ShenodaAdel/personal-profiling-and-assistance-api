@@ -1,9 +1,13 @@
 ﻿using BusinessLogic.DTOs;
+using BusinessLogic.Services.Question;
 using BusinessLogic.Services.Test;
 using BusinessLogic.Services.User;
+using BusinessLogic.Services.UserTest;
+using BusinessLogic.Services.UserTest.Dtos;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace Personal_Profiling_And_Assistance.Controllers.Admin
 {
@@ -14,13 +18,17 @@ namespace Personal_Profiling_And_Assistance.Controllers.Admin
 
         private readonly IUserService _userService;
         private readonly ITestService _testService;
-        
+        private readonly IUserTestService _userTestService;
+        private readonly IQuestionService _questionService;
 
-        public AdminController(IUserService userService , ITestService testService)
+        // Admin Controller to USer 
+
+        public AdminController(IUserService userService , ITestService testService, IUserTestService userTestService, IQuestionService questionService)
         {
             _userService = userService;
             _testService = testService;
-
+            _userTestService = userTestService;
+            _questionService = questionService;
         }
         //[Authorize(Roles = "Admin")] // Only admins can access this i need mena in this 
         [HttpGet("GetAllUsers")]
@@ -62,7 +70,10 @@ namespace Personal_Profiling_And_Assistance.Controllers.Admin
             return Ok(result); // Returns 200 if deletion is successful
         }
 
-        
+        // Admin Controller to USer
+
+        // Admin Controller to Test
+
         [HttpPost("AddTest")]
         public async Task<IActionResult> AddTest([FromBody] TestAddDto dto)
         {
@@ -100,7 +111,7 @@ namespace Personal_Profiling_And_Assistance.Controllers.Admin
         }
 
         
-        [HttpGet("GetTestById/{id}")]
+        [HttpGet("GetTestById/{id}")] 
         public async Task<IActionResult> GetTestById(int id)
         {
             if (id <= 0)
@@ -157,7 +168,201 @@ namespace Personal_Profiling_And_Assistance.Controllers.Admin
             return Ok(result); // 200 if successfully deleted
         }
 
+        // Admin Controller to Test
 
+        [HttpPost("AddTestToUser")]
+        public async Task<ActionResult<ResultDto>> AddUserTestAsync([FromBody] UserTestDto dto)
+        {
+            try
+            {
+                if (dto == null)
+                {
+                    return BadRequest(new ResultDto { Success = false, ErrorMessage = "Invalid request data." });
+                }
+
+                var result = await _userTestService.AddUserTestAsync(dto);
+
+                if (!result.Success)
+                {
+                    return BadRequest(result);
+                }
+
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new ResultDto { Success = false, ErrorMessage = "An internal error occurred." });
+            }
+        }
+
+        [HttpGet("GetTestsByUserId/{userId}")]
+        public async Task<ActionResult<ResultDto>> GetTestsByUserId(int userId)
+        {
+            try
+            {
+                var result = await _userTestService.GetUserTestByIdAsync(userId);
+
+                if (!result.Success || result.Data == null)
+                {
+                    return NotFound(new ResultDto
+                    {
+                        Success = false,
+                        ErrorMessage = "No tests found for this user."
+                    });
+                }
+
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new ResultDto
+                {
+                    Success = false,
+                    ErrorMessage = "An internal error occurred."
+                });
+            }
+        }
+
+        [HttpGet("GetAllUserTests")]
+        public async Task<IActionResult> GetAllUserTests()
+        {
+            var result = await _userTestService.GetAllUserTestsAsync();
+
+            if (!result.Success)
+            {
+                return NotFound(result); // 404 Not Found if no user tests exist
+            }
+
+            return Ok(result); // 200 OK with user test data
+        }
+
+        [HttpDelete("DeleteUserTest/{id}")]
+        public async Task<IActionResult> DeleteUserTest(int id)
+        {
+            if (id <= 0)
+            {
+                return BadRequest(new ResultDto
+                {
+                    Success = false,
+                    ErrorMessage = "Invalid UserTest ID."
+                });
+            }
+
+            var result = await _userTestService.DeleteUserTestAsync(id);
+
+            if (!result.Success)
+            {
+                return NotFound(result); // Return 404 if not found
+            }
+
+            return Ok(result); // Return 200 if deletion was successful
+        }
+
+        [HttpPut("UpdateUserTest/{id}")]
+        public async Task<IActionResult> UpdateUserTest(int id, [FromBody] UpdateUserTestDto dto)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(new ResultDto
+                {
+                    Success = false,
+                    ErrorMessage = "Invalid request data."
+                });
+            }
+
+            var result = await _userTestService.UpdateUserTestAsync(id, dto);
+
+            if (!result.Success)
+            {
+                return BadRequest(result); // 400 Bad Request if update fails
+            }
+
+            return Ok(result); // 200 OK if update succeeds
+        }
+
+        [HttpPost("AddQuestion")]
+        public async Task<IActionResult> AddQuestion([FromBody] QuestionAddDto dto)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(new ResultDto
+                {
+                    Success = false,
+                    ErrorMessage = "Invalid request data."
+                });
+            }
+
+            var result = await _questionService.AddQuestionAsync(dto);
+
+            if (!result.Success)
+            {
+                return BadRequest(result); 
+            }
+
+            return Ok(result);
+        }
+
+
+        [HttpGet("GetAllQuestion")]
+        public async Task<IActionResult> GetAllQuestions()
+        {
+            var result = await _questionService.GetAllQuestionsAsync();
+
+            if (!result.Success)
+            {
+                return NotFound(result); 
+            }
+
+            return Ok(result); 
+        }
+
+        [HttpGet("GetQuestionById/{id}")]
+        public async Task<IActionResult> GetQuestionById(int id)
+        {
+            var result = await _questionService.GetQuestionByIdAsync(id);
+
+            if (!result.Success)
+            {
+                return NotFound(result); // 404 إذا لم يتم العثور على السؤال
+            }
+
+            return Ok(result); // 200 عند النجاح
+        }
+
+        [HttpPut("UpdateQuestion/{id}")]
+        public async Task<IActionResult> UpdateQuestion(int id, [FromBody] QuestionAddDto dto)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(new ResultDto
+                {
+                    Success = false,
+                    ErrorMessage = "Invalid request data."
+                });
+            }
+
+            var result = await _questionService.UpdateQuestionAsync(id, dto);
+
+            if (!result.Success)
+            {
+                return BadRequest(result); 
+            }
+
+            return Ok(result); 
+        }
+
+        [HttpDelete("DeleteQuestion/{id}")]
+        public async Task<IActionResult> DeleteQuestion(int id)
+        {
+            var result = await _questionService.DeleteQuestionAsync(id);
+
+            if (!result.Success)
+            {
+                return NotFound(result); // 404 إذا لم يتم العثور على السؤال
+            }
+
+            return Ok(result); // 200 عند النجاح
+        }
 
     }
 }

@@ -13,7 +13,7 @@ namespace BusinessLogic.Services.Question
 {
     public class QuestionService : IQuestionService
     {
-        private readonly MyDbContext _context;
+        private readonly MyDbContext _context; 
 
         public QuestionService(MyDbContext context)
         {
@@ -22,22 +22,44 @@ namespace BusinessLogic.Services.Question
 
         public async Task<ResultDto> AddQuestionAsync(QuestionAddDto dto)
         {
-            // Validate the input (e.g., ensure Content is not empty)
+            
             if (string.IsNullOrWhiteSpace(dto.Content))
             {
                 return new ResultDto
                 {
-                    Success = true,
+                    Success = false,
                     ErrorMessage = "Content cannot be empty."
                 };
             }
 
+            
+            if (!dto.TestId.HasValue)
+            {
+                return new ResultDto
+                {
+                    Success = false,
+                    ErrorMessage = "TestId is required."
+                };
+            }
+
+            var testExists = await _context.Tests.AnyAsync(t => t.Id == dto.TestId.Value);
+            if (!testExists)
+            {
+                return new ResultDto
+                {
+                    Success = false,
+                    ErrorMessage = "Test not found."
+                };
+            }
+
+            
             var question = new Data.Models.Question
             {
-                Content = dto.Content
+                Content = dto.Content,
+                TestId = dto.TestId.Value 
             };
 
-            // Add the question to the context
+
             await _context.Questions.AddAsync(question);
             int saveResult = await _context.SaveChangesAsync();
 
@@ -45,7 +67,12 @@ namespace BusinessLogic.Services.Question
             {
                 return new ResultDto
                 {
-                    Data = question,
+                    Data = new
+                    {
+                        QuestionId = question.Id,
+                        Content = question.Content,
+                        TestId = question.TestId
+                    },
                     Success = true
                 };
             }
@@ -69,7 +96,7 @@ namespace BusinessLogic.Services.Question
             {
                 return new ResultDto
                 {
-                    Success = true,
+                    Success = false,
                     ErrorMessage = "Question not found."
                 };
             }
@@ -82,7 +109,11 @@ namespace BusinessLogic.Services.Question
                 return new ResultDto
                 {
                     Success = true,
-                    Data = "Question deleted successfully."
+                    Data = new
+                    {
+                        question.Id,
+                        question.Content
+                    }
                 };
             }
 
@@ -95,7 +126,7 @@ namespace BusinessLogic.Services.Question
 
         // End of DeleteQuestionAsync method
 
-        public async Task<ResultDto> UpdateQuestionAsync(int id, Data.Models.Question dto)
+        public async Task<ResultDto> UpdateQuestionAsync(int id, QuestionAddDto dto)
         {
             var question = await _context.Questions.FindAsync(id);
 
@@ -103,7 +134,7 @@ namespace BusinessLogic.Services.Question
             {
                 return new ResultDto
                 {             
-                    Success = true,
+                    Success = false,
                     ErrorMessage = "Question not found."
                 };
             }
@@ -115,7 +146,7 @@ namespace BusinessLogic.Services.Question
             {
                 return new ResultDto
                 {
-                    Success = true,
+                    Success = false,
                     ErrorMessage = "Question Content already exists in the database."
                 };
             }
@@ -130,7 +161,12 @@ namespace BusinessLogic.Services.Question
             {
                 return new ResultDto
                 {
-                    Data = question,
+                    Data = new
+                    {
+                        question.Id,
+                        question.Content,
+                        question.TestId
+                    },
                     Success = true
                 };
             }
@@ -160,7 +196,11 @@ namespace BusinessLogic.Services.Question
 
             return new ResultDto
             {
-                Data = question,
+                Data = new
+                {
+                    question.Content,
+                    question.TestId
+                },
                 Success = true
             };
         }
@@ -169,21 +209,28 @@ namespace BusinessLogic.Services.Question
 
         public async Task<ResultDto> GetAllQuestionsAsync()
         {
-            var questions = await _context.Questions.ToListAsync();
+            var questions = await _context.Questions
+                .Select(q => new
+                {
+                    QuestionId = q.Id,
+                    Content = q.Content,
+                    TestId = q.TestId
+                })
+                .ToListAsync();
 
             return questions.Any()
-            ? new ResultDto
-            {
-                Data = questions,
-                
-                Success = true
-            }
+                ? new ResultDto
+                {
+                    Data = questions,
+                    Success = true
+                }
                 : new ResultDto
                 {
                     Success = false,
                     ErrorMessage = "No questions found."
                 };
         }
+
 
         // End of GetAllQuestionsAsync method
     }

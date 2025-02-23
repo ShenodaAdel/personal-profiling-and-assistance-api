@@ -26,7 +26,7 @@ namespace BusinessLogic.Services.UserTest
             {
                 return new ResultDto
                 {
-                    Success = true,
+                    Success = false,
                     ErrorMessage = "Result cannot be empty."
                 };
             }
@@ -36,7 +36,7 @@ namespace BusinessLogic.Services.UserTest
             {
                 return new ResultDto
                 {
-                    Success = true,
+                    Success = false,
                     ErrorMessage = "UserId must be provided."
                 };
             }
@@ -46,7 +46,7 @@ namespace BusinessLogic.Services.UserTest
             {
                 return new ResultDto
                 {
-                    Success = true,
+                    Success = false,
                     ErrorMessage = "TestId must be provided."
                 };
             }
@@ -57,7 +57,7 @@ namespace BusinessLogic.Services.UserTest
             {
                 return new ResultDto
                 {
-                    Success = true,
+                    Success = false,
                     ErrorMessage = "User not found."
                 };
             }
@@ -68,7 +68,7 @@ namespace BusinessLogic.Services.UserTest
             {
                 return new ResultDto
                 {
-                    Success = true,
+                    Success = false,
                     ErrorMessage = "Test not found."
                 };
             }
@@ -90,7 +90,13 @@ namespace BusinessLogic.Services.UserTest
                 return new ResultDto
                 {
                     Success = true,
-                    Data = userTest
+                    Data = new
+                    {
+                        UserName = user.Name,
+                        Email = user.Email,
+                        Result = userTest.Result,
+                        Date = userTest.Date
+                    }
                 };
             }
 
@@ -103,61 +109,34 @@ namespace BusinessLogic.Services.UserTest
 
         // End of AddUserTestAsync method
 
-        public async Task<ResultDto> UpdateUserTestAsync(int id, UserTestDto dto)
+        public async Task<ResultDto> UpdateUserTestAsync(int id, UpdateUserTestDto dto)
         {
-            // Find the existing UserTest
-            var userTest = await _context.UserTests.FindAsync(id);
+            
+            var userTest = await _context.UserTests
+                .Include(ut => ut.User)
+                .Include(ut => ut.Test)
+                .FirstOrDefaultAsync(ut => ut.Id == id);
+
             if (userTest == null)
             {
                 return new ResultDto
                 {
-                    Success = true,
+                    Success = false,
                     ErrorMessage = "UserTest not found."
                 };
             }
 
-            // Validate required fields
+            
             if (string.IsNullOrWhiteSpace(dto.Result))
             {
                 return new ResultDto
                 {
-                    Success = true,
+                    Success = false,
                     ErrorMessage = "Result cannot be empty."
                 };
             }
 
-            // Optionally, validate that UserId and TestId still refer to valid entities
-            if (dto.UserId.HasValue)
-            {
-                var user = await _context.Users.FindAsync(dto.UserId.Value);
-                if (user == null)
-                {
-                    return new ResultDto
-                    {
-                        Success = true,
-                        ErrorMessage = "User not found."
-                    };
-                }
-            }
-
-            if (dto.TestId.HasValue)
-            {
-                var test = await _context.Tests.FindAsync(dto.TestId.Value);
-                if (test == null)
-                {
-                    return new ResultDto
-                    {
-                        Success = true,
-                        ErrorMessage = "Test not found."
-                    };
-                }
-            }
-
-            // Update fields
-            userTest.Date = dto.Date;
             userTest.Result = dto.Result;
-            userTest.UserId = dto.UserId;
-            userTest.TestId = dto.TestId;
 
             _context.UserTests.Update(userTest);
             int saveResult = await _context.SaveChangesAsync();
@@ -167,28 +146,41 @@ namespace BusinessLogic.Services.UserTest
                 return new ResultDto
                 {
                     Success = true,
-                    Data = userTest
+                    Data = new
+                    {
+                        UserName = userTest.User.Name,
+                        UserId = userTest.UserId,
+                        TestId = userTest.TestId,
+                        Result = userTest.Result,
+                        Date = userTest.Date
+                    }
                 };
             }
 
             return new ResultDto
             {
-                Success = true,
+                Success = false,
                 ErrorMessage = "UserTest could not be updated."
             };
         }
+
+
 
         // End of UpdateUserTestAsync method
 
         public async Task<ResultDto> DeleteUserTestAsync(int id)
         {
-            // Find the existing UserTest
-            var userTest = await _context.UserTests.FindAsync(id);
+            // Find the existing UserTest with User and Test included
+            var userTest = await _context.UserTests
+                .Include(ut => ut.User)
+                .Include(ut => ut.Test)
+                .FirstOrDefaultAsync(ut => ut.Id == id);
+
             if (userTest == null)
             {
                 return new ResultDto
                 {
-                    Success = true,
+                    Success = false,
                     ErrorMessage = "UserTest not found."
                 };
             }
@@ -204,13 +196,18 @@ namespace BusinessLogic.Services.UserTest
                     {
                         Success = true,
                         ErrorMessage = "UserTest deleted successfully.",
-                        Data = userTest
+                        Data = new
+                        {
+                            UserTestId = userTest.Id,
+                            UserName = userTest.User.Name,  
+                            TestName = userTest.Test.Name   
+                        }
                     };
                 }
 
                 return new ResultDto
                 {
-                    Success = true,
+                    Success = false,
                     ErrorMessage = "UserTest could not be deleted."
                 };
             }
@@ -225,41 +222,57 @@ namespace BusinessLogic.Services.UserTest
         }
 
 
+
         // End of DeleteUserTestAsync method
 
-        public async Task<ResultDto> GetUserTestByIdAsync(int id)
+        public async Task<ResultDto> GetUserTestByIdAsync(int userId)
         {
-            var userTest = await _context.UserTests
-                .Include(ut => ut.User)
+            var userTests = await _context.UserTests
+                .Where(ut => ut.UserId == userId)
                 .Include(ut => ut.Test)
-                .FirstOrDefaultAsync(ut => ut.Id == id);
+                .Select(ut => new
+                {
+                    TestName =  ut.Test.Name,
+                    Result = ut.Result,       
+                    Date = ut.Date,
+                    UserTestId = ut.Id 
+                })
+                .ToListAsync();
 
-            if (userTest == null)
+            if (userTests == null || userTests.Count == 0)
             {
                 return new ResultDto
                 {
                     Success = false,
-                    ErrorMessage = "UserTest not found."
+                    ErrorMessage = "No tests found for this user."
                 };
             }
 
             return new ResultDto
             {
                 Success = true,
-                Data = userTest
+                Data = userTests // Return the list of tests
             };
         }
+
 
         // End of GetUserTestByIdAsync
 
         public async Task<ResultDto> GetAllUserTestsAsync()
         {
-            var userTests = await _context.UserTests
+            var userTestCounts = await _context.UserTests
                 .Include(ut => ut.User)
-                .Include(ut => ut.Test)
+                .GroupBy(ut => new { ut.UserId, ut.User.Name, ut.User.Email }) // Group by User
+                .Select(group => new
+                {
+                    UserId = group.Key.UserId,
+                    UserName = group.Key.Name,
+                    UserEmail = group.Key.Email,
+                    TestCount = group.Count() // Count number of tests taken
+                })
                 .ToListAsync();
 
-            if (!userTests.Any())
+            if (!userTestCounts.Any())
             {
                 return new ResultDto
                 {
@@ -271,9 +284,11 @@ namespace BusinessLogic.Services.UserTest
             return new ResultDto
             {
                 Success = true,
-                Data = userTests
+                Data = userTestCounts
             };
         }
+
+
 
         // End of GetAllUserTestsAsync
     }
