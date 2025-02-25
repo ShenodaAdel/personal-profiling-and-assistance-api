@@ -26,7 +26,7 @@ namespace BusinessLogic.Services.QuestionChoice
             {
                 return new ResultDto
                 {
-                    Success = true,
+                    Success = false,
                     ErrorMessage = "QuestionId must be provided."
                 };
             }
@@ -35,29 +35,37 @@ namespace BusinessLogic.Services.QuestionChoice
             {
                 return new ResultDto
                 {
-                    Success = true,
+                    Success = false,
                     ErrorMessage = "ChoiceId must be provided."
                 };
             }
 
             // Check if the Question exists
-            var question = await _context.Questions.FindAsync(dto.QuestionId.Value);
+            var question = await _context.Questions
+                .Where(q => q.Id == dto.QuestionId)
+                .Select(q => new { q.Id, q.Content })
+                .FirstOrDefaultAsync();
+
             if (question == null)
             {
                 return new ResultDto
                 {
-                    Success = true,
+                    Success = false,
                     ErrorMessage = "Question not found."
                 };
             }
 
             // Check if the Choice exists
-            var choice = await _context.Choices.FindAsync(dto.ChoiceId.Value);
+            var choice = await _context.Choices
+                .Where(c => c.Id == dto.ChoiceId)
+                .Select(c => new { c.Id, c.Content })
+                .FirstOrDefaultAsync();
+
             if (choice == null)
             {
                 return new ResultDto
                 {
-                    Success = true,
+                    Success = false,
                     ErrorMessage = "Choice not found."
                 };
             }
@@ -70,12 +78,19 @@ namespace BusinessLogic.Services.QuestionChoice
 
             await _context.QuestionChoices.AddAsync(questionChoice);
             int saveResult = await _context.SaveChangesAsync();
+
             if (saveResult > 0)
             {
                 return new ResultDto
                 {
                     Success = true,
-                    Data = questionChoice
+                    Data = new
+                    {
+                        QuestionId = question.Id,
+                        QuestionContent = question.Content,
+                        ChoiceId = choice.Id,
+                        ChoiceContent = choice.Content
+                    }
                 };
             }
 
@@ -86,21 +101,26 @@ namespace BusinessLogic.Services.QuestionChoice
             };
         }
 
+
         // End of AddQuestionChoiceAsync
 
         public async Task<ResultDto> UpdateQuestionChoiceAsync(int id, QuestionChoiceDto dto)
         {
-            var existingQuestionChoice = await _context.QuestionChoices.FindAsync(id);
+            var existingQuestionChoice = await _context.QuestionChoices
+                .Include(qc => qc.Question)
+                .Include(qc => qc.Choice)
+                .FirstOrDefaultAsync(qc => qc.Id == id);
+
             if (existingQuestionChoice == null)
             {
                 return new ResultDto
                 {
-                    Success = true,
+                    Success = false,
                     ErrorMessage = "QuestionChoice not found."
                 };
             }
 
-            // If provided, validate the new QuestionId
+            // Validate new QuestionId if provided
             if (dto.QuestionId.HasValue)
             {
                 var question = await _context.Questions.FindAsync(dto.QuestionId.Value);
@@ -108,13 +128,15 @@ namespace BusinessLogic.Services.QuestionChoice
                 {
                     return new ResultDto
                     {
-                        Success = true,
+                        Success = false,
                         ErrorMessage = "Question not found."
                     };
                 }
+                existingQuestionChoice.Question = question;  // Update question reference
+                existingQuestionChoice.QuestionId = question.Id;
             }
 
-            // If provided, validate the new ChoiceId
+            // Validate new ChoiceId if provided
             if (dto.ChoiceId.HasValue)
             {
                 var choice = await _context.Choices.FindAsync(dto.ChoiceId.Value);
@@ -122,50 +144,69 @@ namespace BusinessLogic.Services.QuestionChoice
                 {
                     return new ResultDto
                     {
-                        Success = true,
+                        Success = false,
                         ErrorMessage = "Choice not found."
                     };
                 }
+                existingQuestionChoice.Choice = choice;  // Update choice reference
+                existingQuestionChoice.ChoiceId = choice.Id;
             }
-
-            // Update the fields
-            existingQuestionChoice.QuestionId = dto.QuestionId ?? existingQuestionChoice.QuestionId;
-            existingQuestionChoice.ChoiceId = dto.ChoiceId ?? existingQuestionChoice.ChoiceId;
 
             _context.QuestionChoices.Update(existingQuestionChoice);
             int saveResult = await _context.SaveChangesAsync();
+
             if (saveResult > 0)
             {
                 return new ResultDto
                 {
                     Success = true,
-                    Data = existingQuestionChoice
+                    Data = new
+                    {
+                        QuestionId = existingQuestionChoice.Question.Id,
+                        QuestionContent = existingQuestionChoice.Question.Content,
+                        ChoiceId = existingQuestionChoice.Choice.Id,
+                        ChoiceContent = existingQuestionChoice.Choice.Content
+                    }
                 };
             }
 
             return new ResultDto
             {
-                Success = true,
+                Success = false,
                 ErrorMessage = "QuestionChoice could not be updated."
             };
         }
+
 
         // End of UpdateQuestionChoiceAsync
 
         public async Task<ResultDto> DeleteQuestionChoiceAsync(int id)
         {
-            var questionChoice = await _context.QuestionChoices.FindAsync(id);
+            var questionChoice = await _context.QuestionChoices
+                .Include(qc => qc.Question)
+                .Include(qc => qc.Choice)
+                .FirstOrDefaultAsync(qc => qc.Id == id);
+
             if (questionChoice == null)
             {
                 return new ResultDto
                 {
-                    Success = true,
+                    Success = false,
                     ErrorMessage = "QuestionChoice not found."
                 };
             }
 
             try
             {
+                // Capture the deleted data
+                var deletedData = new
+                {
+                    QuestionId = questionChoice.Question.Id,
+                    QuestionContent = questionChoice.Question.Content,
+                    ChoiceId = questionChoice.Choice.Id,
+                    ChoiceContent = questionChoice.Choice.Content
+                };
+
                 _context.QuestionChoices.Remove(questionChoice);
                 int saveResult = await _context.SaveChangesAsync();
 
@@ -174,13 +215,13 @@ namespace BusinessLogic.Services.QuestionChoice
                     return new ResultDto
                     {
                         Success = true,
-                        Data = "QuestionChoice deleted successfully."
+                        Data = deletedData
                     };
                 }
 
                 return new ResultDto
                 {
-                    Success = true,
+                    Success = false,
                     ErrorMessage = "QuestionChoice could not be deleted."
                 };
             }
@@ -194,14 +235,21 @@ namespace BusinessLogic.Services.QuestionChoice
             }
         }
 
+
         // End of DeleteQuestionChoiceAsync
 
         public async Task<ResultDto> GetQuestionChoiceByIdAsync(int id)
         {
             var questionChoice = await _context.QuestionChoices
-                .Include(qc => qc.Question)
-                .Include(qc => qc.Choice)
-                .FirstOrDefaultAsync(qc => qc.Id == id);
+                .Where(qc => qc.Id == id)
+                .Select(qc => new
+                {
+                    QuestionId = qc.Question.Id,
+                    QuestionContent = qc.Question.Content,
+                    ChoiceId = qc.Choice.Id,
+                    ChoiceContent = qc.Choice.Content
+                })
+                .FirstOrDefaultAsync();
 
             if (questionChoice == null)
             {
@@ -219,13 +267,25 @@ namespace BusinessLogic.Services.QuestionChoice
             };
         }
 
+
         // End of GetQuestionChoiceByIdAsync
 
         public async Task<ResultDto> GetAllQuestionChoicesAsync()
         {
             var questionChoices = await _context.QuestionChoices
                 .Include(qc => qc.Question)
+                .ThenInclude(q => q.Test) // Ensure Test is included
                 .Include(qc => qc.Choice)
+                .Select(qc => new
+                {
+                    Id = qc.Id,  // ID of the QuestionChoice
+                    QuestionId = qc.Question.Id,
+                    QuestionContent = qc.Question.Content,
+                    ChoiceId = qc.Choice.Id,
+                    ChoiceContent = qc.Choice.Content,
+                    TestId = qc.Question.Test.Id, // Assuming Test has an Id field
+                    TestName = qc.Question.Test.Name // Assuming Test has a Name field
+                })
                 .ToListAsync();
 
             if (!questionChoices.Any())
@@ -243,6 +303,7 @@ namespace BusinessLogic.Services.QuestionChoice
                 Data = questionChoices
             };
         }
+
 
         // End of GetAllQuestionChoicesAsync
 

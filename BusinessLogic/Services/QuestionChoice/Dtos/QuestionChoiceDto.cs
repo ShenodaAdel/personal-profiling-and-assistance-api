@@ -10,5 +10,6 @@ namespace BusinessLogic.Services.QuestionChoice.Dtos
     {
         public int? QuestionId { get; set; }
         public int? ChoiceId { get; set; }
+
     }
 }

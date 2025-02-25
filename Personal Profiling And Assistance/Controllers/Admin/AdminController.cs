@@ -1,6 +1,8 @@
 ﻿using BusinessLogic.DTOs;
 using BusinessLogic.Services.Choice;
 using BusinessLogic.Services.Question;
+using BusinessLogic.Services.QuestionChoice;
+using BusinessLogic.Services.QuestionChoice.Dtos;
 using BusinessLogic.Services.Test;
 using BusinessLogic.Services.User;
 using BusinessLogic.Services.UserTest;
@@ -22,15 +24,17 @@ namespace Personal_Profiling_And_Assistance.Controllers.Admin
         private readonly IUserTestService _userTestService;
         private readonly IQuestionService _questionService;
         private readonly IChoiceService _choiceService;
+        private readonly IQuestionChoiceService _questionChoiceService;
         // Admin Controller to USer 
 
-        public AdminController(IUserService userService, ITestService testService, IUserTestService userTestService, IQuestionService questionService, IChoiceService choiceService)
+        public AdminController(IUserService userService, ITestService testService, IUserTestService userTestService, IQuestionService questionService, IChoiceService choiceService , IQuestionChoiceService questionChoiceService)
         {
             _userService = userService;
             _testService = testService;
             _userTestService = userTestService;
             _questionService = questionService;
             _choiceService = choiceService;
+            _questionChoiceService = questionChoiceService;
         }
         //[Authorize(Roles = "Admin")] // Only admins can access this i need mena in this 
         [HttpGet("GetAllUsers")]
@@ -427,6 +431,92 @@ namespace Personal_Profiling_And_Assistance.Controllers.Admin
 
             if (!result.Success)
                 return BadRequest(result);
+
+            return Ok(result);
+        }
+
+        [HttpPost("AddQuestionChoice")]
+        public async Task<IActionResult> AddQuestionChoice([FromBody] QuestionChoiceDto dto)
+        {
+            try
+            {
+                if (dto == null)
+                {
+                    return BadRequest(new ResultDto { Success = false, ErrorMessage = "Invalid request data." });
+                }
+
+                var result = await _questionChoiceService.AddQuestionChoiceAsync(dto);
+
+                if (!result.Success)
+                {
+                    return BadRequest(result);
+                }
+
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new ResultDto { Success = false, ErrorMessage = "An internal error occurred." });
+            }
+        }
+
+        [HttpGet("GetAllQuestionChoices")]
+        public async Task<IActionResult> GetAllQuestionChoices()
+        {
+            var result = await _questionChoiceService.GetAllQuestionChoicesAsync();
+
+            if (!result.Success)
+            {
+                return NotFound(result);
+            }
+
+            return Ok(result);
+        }
+
+        [HttpGet("GetQuestionChoiceById/{id}")]
+        public async Task<IActionResult> GetQuestionChoiceById(int id)
+        {
+            var result = await _questionChoiceService.GetQuestionChoiceByIdAsync(id);
+
+            if (!result.Success)
+            {
+                return NotFound(result);
+            }
+
+            return Ok(result);
+        }
+
+        [HttpPut("UpdateQuestionChoice/{id}")]
+        public async Task<IActionResult> UpdateQuestionChoice(int id, [FromBody] QuestionChoiceDto dto)
+        {
+            if (dto == null)
+            {
+                return BadRequest(new ResultDto
+                {
+                    Success = false,
+                    ErrorMessage = "Invalid request data."
+                });
+            }
+
+            var result = await _questionChoiceService.UpdateQuestionChoiceAsync(id, dto);
+
+            if (!result.Success)
+            {
+                return BadRequest(result);
+            }
+
+            return Ok(result);
+        }
+
+        [HttpDelete("DeleteQuestionChoice/{id}")]
+        public async Task<IActionResult> DeleteQuestionChoice(int id)
+        {
+            var result = await _questionChoiceService.DeleteQuestionChoiceAsync(id);
+
+            if (!result.Success)
+            {
+                return BadRequest(result);
+            }
 
             return Ok(result);
         }
