@@ -1,6 +1,7 @@
 ﻿using BusinessLogic.DTOs;
 using Data;
 using Data.Models;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -25,7 +26,7 @@ namespace BusinessLogic.Services.Choice
             {
                 return new ResultDto
                 {
-                    Success = true,
+                    Success = false,
                     ErrorMessage = "Content cannot be empty."
                 };
             }
@@ -40,7 +41,11 @@ namespace BusinessLogic.Services.Choice
             {
                 return new ResultDto
                 {
-                    Data = choice,
+                    Data = new
+                    {
+                        Content = choice.Content,
+                        ChoiceId = choice.Id
+                    },
                     Success = true
                 };
             }
@@ -59,7 +64,7 @@ namespace BusinessLogic.Services.Choice
             {
                 return new ResultDto
                 {
-                    Success = true,
+                    Success = false,
                     ErrorMessage = "Choice not found."
                 };
             }
@@ -69,7 +74,11 @@ namespace BusinessLogic.Services.Choice
             {
                 return new ResultDto
                 {
-                    Data = choice,
+                    Data = new
+                    {
+                        Content = choice.Content,
+                        ChoiceId = choice.Id
+                    },
                     Success = true
                 };
             }
@@ -80,14 +89,14 @@ namespace BusinessLogic.Services.Choice
             };
         }
         // End of DeleteChoiceAsync method
-        public async Task<ResultDto> UpdateChoiceAsync(int id, Data.Models.Choice dto)
+        public async Task<ResultDto> UpdateChoiceAsync(int id, ChoiceAddDto dto)
         {
             var choice = await _context.Choices.FindAsync(id);
             if (choice == null)
             {
                 return new ResultDto
                 {
-                    Success = true,
+                    Success = false,
                     ErrorMessage = "Choice not found."
                 };
             }
@@ -97,7 +106,7 @@ namespace BusinessLogic.Services.Choice
             {
                 return new ResultDto
                 {
-                    Success = true,
+                    Success = false,
                     ErrorMessage = "Content cannot be empty."
                 };
             }
@@ -110,7 +119,10 @@ namespace BusinessLogic.Services.Choice
             {
                 return new ResultDto
                 {
-                    Data = choice,
+                    Data = new {
+                        NewContent = choice.Content,
+                        Id = choice.Id
+                    },
                     Success = true
                 };
             }
@@ -137,7 +149,11 @@ namespace BusinessLogic.Services.Choice
             }
             return new ResultDto
             {
-                Data = choice,
+                Data = new
+                {
+                    Content = choice.Content,
+                    ChoiceId = choice.Id
+                },
                 Success = true
             };
         }
@@ -146,13 +162,17 @@ namespace BusinessLogic.Services.Choice
 
         public async Task<ResultDto> GetAllChoicesAsync()
         {
-            var choices = _context.Choices.ToList();
+            var choices = await _context.Choices
+                .Select(c => new { c.Id, c.Content })
+                .ToListAsync();
+
             return new ResultDto
             {
                 Data = choices,
                 Success = true
             };
         }
+
 
         // End of GetAllChoicesAsync method
     }

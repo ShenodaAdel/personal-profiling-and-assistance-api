@@ -1,4 +1,5 @@
 ﻿using BusinessLogic.DTOs;
+using BusinessLogic.Services.Choice;
 using BusinessLogic.Services.Question;
 using BusinessLogic.Services.Test;
 using BusinessLogic.Services.User;
@@ -20,15 +21,16 @@ namespace Personal_Profiling_And_Assistance.Controllers.Admin
         private readonly ITestService _testService;
         private readonly IUserTestService _userTestService;
         private readonly IQuestionService _questionService;
-
+        private readonly IChoiceService _choiceService;
         // Admin Controller to USer 
 
-        public AdminController(IUserService userService , ITestService testService, IUserTestService userTestService, IQuestionService questionService)
+        public AdminController(IUserService userService, ITestService testService, IUserTestService userTestService, IQuestionService questionService, IChoiceService choiceService)
         {
             _userService = userService;
             _testService = testService;
             _userTestService = userTestService;
             _questionService = questionService;
+            _choiceService = choiceService;
         }
         //[Authorize(Roles = "Admin")] // Only admins can access this i need mena in this 
         [HttpGet("GetAllUsers")]
@@ -96,7 +98,7 @@ namespace Personal_Profiling_And_Assistance.Controllers.Admin
             return Ok(result);
         }
 
-        
+
         [HttpGet("GetAllTests")]
         public async Task<IActionResult> GetAllTests()
         {
@@ -110,8 +112,8 @@ namespace Personal_Profiling_And_Assistance.Controllers.Admin
             return Ok(result); // Return 200 with test data
         }
 
-        
-        [HttpGet("GetTestById/{id}")] 
+
+        [HttpGet("GetTestById/{id}")]
         public async Task<IActionResult> GetTestById(int id)
         {
             if (id <= 0)
@@ -296,7 +298,7 @@ namespace Personal_Profiling_And_Assistance.Controllers.Admin
 
             if (!result.Success)
             {
-                return BadRequest(result); 
+                return BadRequest(result);
             }
 
             return Ok(result);
@@ -310,10 +312,10 @@ namespace Personal_Profiling_And_Assistance.Controllers.Admin
 
             if (!result.Success)
             {
-                return NotFound(result); 
+                return NotFound(result);
             }
 
-            return Ok(result); 
+            return Ok(result);
         }
 
         [HttpGet("GetQuestionById/{id}")]
@@ -345,10 +347,10 @@ namespace Personal_Profiling_And_Assistance.Controllers.Admin
 
             if (!result.Success)
             {
-                return BadRequest(result); 
+                return BadRequest(result);
             }
 
-            return Ok(result); 
+            return Ok(result);
         }
 
         [HttpDelete("DeleteQuestion/{id}")]
@@ -362,6 +364,71 @@ namespace Personal_Profiling_And_Assistance.Controllers.Admin
             }
 
             return Ok(result); // 200 عند النجاح
+        }
+
+        [HttpPost("AddChoice")]
+        public async Task<IActionResult> AddChoice([FromBody] ChoiceAddDto dto)
+        {
+            if (dto == null)
+            {
+                return BadRequest(new ResultDto
+                {
+                    Success = false,
+                    ErrorMessage = "Invalid request data."
+                });
+            }
+
+            var result = await _choiceService.AddChoiceAsync(dto);
+
+            if (result.Success)
+            {
+                return Ok(result);
+            }
+
+            return BadRequest(result);
+        }
+
+        [HttpDelete("DeleteChoice/{id}")]
+        public async Task<IActionResult> DeleteChoice(int id)
+        {
+            var result = await _choiceService.DeleteChoiceAsync(id);
+
+            if (result.Success)
+            {
+                return Ok(result);
+            }
+
+            return BadRequest(result);
+        }
+
+        [HttpGet("GetChoice/{id}")]
+        public async Task<IActionResult> GetChoiceById(int id)
+        {
+            var result = await _choiceService.GetChoiceByIdAsync(id);
+            if (result.Success)
+            {
+                return Ok(result);
+            }
+
+            return BadRequest(result);
+        }
+
+        [HttpGet("GetAllChoices")]
+        public async Task<IActionResult> GetAllChoices()
+        {
+            var result = await _choiceService.GetAllChoicesAsync();
+            return Ok(result);
+        }
+
+        [HttpPut("UpdateChoice/{id}")]
+        public async Task<IActionResult> UpdateChoice(int id, [FromBody] ChoiceAddDto dto)
+        {
+            var result = await _choiceService.UpdateChoiceAsync(id, dto);
+
+            if (!result.Success)
+                return BadRequest(result);
+
+            return Ok(result);
         }
 
     }

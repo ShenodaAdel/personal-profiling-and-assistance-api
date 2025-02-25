@@ -12,7 +12,7 @@ namespace BusinessLogic.Services.Choice
         Task<ResultDto> AddChoiceAsync(ChoiceAddDto dto);
         Task<ResultDto> DeleteChoiceAsync(int id);
 
-        Task<ResultDto> UpdateChoiceAsync(int id, Data.Models.Choice dto);
+        Task<ResultDto> UpdateChoiceAsync(int id, ChoiceAddDto dto);
 
         Task<ResultDto> GetChoiceByIdAsync(int id);
 
