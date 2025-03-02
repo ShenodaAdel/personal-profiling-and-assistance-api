@@ -7,6 +7,8 @@ using BusinessLogic.Services.User;
 using BusinessLogic.Services.UserTest;
 using BusinessLogic.ServicesConfigrations;
 using Data;
+using Data.Models;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -20,7 +22,7 @@ builder.Services.AddControllers();
 
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<ITestService, TestService>();
-builder.Services.AddScoped<IUserTestService,UserTestService>();
+builder.Services.AddScoped<IUserTestService, UserTestService>();
 builder.Services.AddScoped<IQuestionService, QuestionService>();
 builder.Services.AddScoped<IChoiceService, ChoiceService>();
 builder.Services.AddScoped<IQuestionChoiceService, QuestionChoiceService>(); 
@@ -30,6 +32,10 @@ builder.Services.AddControllers()
     {
         options.JsonSerializerOptions.PropertyNameCaseInsensitive = true; 
     });
+builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
+    .AddEntityFrameworkStores<MyDbContext>()
+    .AddDefaultTokenProviders();
+// Add services IdentityRole in program file.
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();

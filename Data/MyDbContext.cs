@@ -1,4 +1,5 @@
 ﻿using Data.Models;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -8,14 +9,14 @@ using System.Threading.Tasks;
 
 namespace Data
 {
-    public class MyDbContext : DbContext
+    public class MyDbContext : IdentityDbContext<ApplicationUser>
     {
         public MyDbContext(DbContextOptions<MyDbContext> options) : base(options)
         {
-            
-        }
-        public DbSet<User> Users { get; set; }
 
+        }
+
+        public DbSet<ApplicationUser> Users { get; set; }
         public DbSet<UserTest> UserTests { get; set; }
 
         public DbSet<Test> Tests { get; set; }

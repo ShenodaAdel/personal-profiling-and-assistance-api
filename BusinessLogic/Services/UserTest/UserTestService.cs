@@ -92,7 +92,7 @@ namespace BusinessLogic.Services.UserTest
                     Success = true,
                     Data = new
                     {
-                        UserName = user.Name,
+                        UserName = user.UserName,
                         Email = user.Email,
                         Result = userTest.Result,
                         Date = userTest.Date
@@ -148,7 +148,7 @@ namespace BusinessLogic.Services.UserTest
                     Success = true,
                     Data = new
                     {
-                        UserName = userTest.User.Name,
+                        UserName = userTest.User?.UserName,
                         UserId = userTest.UserId,
                         TestId = userTest.TestId,
                         Result = userTest.Result,
@@ -199,7 +199,7 @@ namespace BusinessLogic.Services.UserTest
                         Data = new
                         {
                             UserTestId = userTest.Id,
-                            UserName = userTest.User.Name,  
+                            UserName = userTest.User?.UserName,  
                             TestName = userTest.Test.Name   
                         }
                     };
@@ -262,11 +262,11 @@ namespace BusinessLogic.Services.UserTest
         {
             var userTestCounts = await _context.UserTests
                 .Include(ut => ut.User)
-                .GroupBy(ut => new { ut.UserId, ut.User.Name, ut.User.Email }) // Group by User
+                .GroupBy(ut => new { ut.UserId, ut.User.UserName, ut.User.Email }) // Group by User
                 .Select(group => new
                 {
                     UserId = group.Key.UserId,
-                    UserName = group.Key.Name,
+                    UserName = group.Key.UserName,
                     UserEmail = group.Key.Email,
                     TestCount = group.Count() // Count number of tests taken
                 })

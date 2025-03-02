@@ -51,7 +51,7 @@ namespace Personal_Profiling_And_Assistance.Controllers.Admin
         }
 
         [HttpGet("GetUserById/{id}")]
-        public async Task<IActionResult> GetUserById(int id)
+        public async Task<IActionResult> GetUserById(string id)
         {
             var result = await _userService.GetByIdUserAsync(id);
 
@@ -64,7 +64,7 @@ namespace Personal_Profiling_And_Assistance.Controllers.Admin
         }
 
         [HttpDelete("DeleteUser/{id}")]
-        public async Task<IActionResult> DeleteUser(int id)
+        public async Task<IActionResult> DeleteUser(string id)
         {
             var result = await _userService.DeleteUserByIdAsync(id);
 
