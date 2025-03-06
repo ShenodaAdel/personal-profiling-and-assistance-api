@@ -22,7 +22,6 @@ namespace BusinessLogic.Services.User
     {
         private readonly MyDbContext _context;
         private readonly IConfiguration _configuration;
-        //private IConfiguration configuration;
         private readonly UserManager<Data.Models.ApplicationUser> _userManager;
         private readonly SignInManager<Data.Models.ApplicationUser> _signManager;
 
