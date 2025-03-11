@@ -1,4 +1,5 @@
 using BusinessLogic.Extensions;
+using BusinessLogic.Services.Auth;
 using BusinessLogic.Services.Choice;
 using BusinessLogic.Services.Question;
 using BusinessLogic.Services.QuestionChoice;
@@ -26,7 +27,7 @@ builder.Services.AddScoped<IUserTestService, UserTestService>();
 builder.Services.AddScoped<IQuestionService, QuestionService>();
 builder.Services.AddScoped<IChoiceService, ChoiceService>();
 builder.Services.AddScoped<IQuestionChoiceService, QuestionChoiceService>();
-builder.Services.AddScoped<IGenerateTokenService, GenerateTokenService>();
+builder.Services.AddScoped<IAuthService, AuthService>();
 
 builder.Services.AddControllers()
     .AddJsonOptions(options =>

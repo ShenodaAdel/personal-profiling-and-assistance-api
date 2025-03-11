@@ -1,13 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using BusinessLogic.DTOs;
+using BusinessLogic.Services.Auth.Dtos;
+using BusinessLogic.Services.User.Dtos;
 
 namespace BusinessLogic.Services.Auth
 {
     public interface IAuthService
     {
+        Task<ResultDto> RegisterAsync(RegisterDto dto);
+        Task<ResultDto> LoginAsync(LoginDto dto);
+        Task<ResultDto> GenerateTokenAsync(string email, string password);
 
     }
 }
