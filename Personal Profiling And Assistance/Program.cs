@@ -29,6 +29,12 @@ builder.Services.AddScoped<IChoiceService, ChoiceService>();
 builder.Services.AddScoped<IQuestionChoiceService, QuestionChoiceService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 
+
+
+
+
+
+
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
@@ -45,8 +51,8 @@ builder.Services.AddSwaggerGen();
 
 builder.Services.AddCustomJwtAuth(builder.Configuration);
 
-var app = builder.Build();
 
+var app = builder.Build();
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {

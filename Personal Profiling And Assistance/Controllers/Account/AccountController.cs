@@ -1,6 +1,7 @@
 ﻿using BusinessLogic.Services.Auth;
 using BusinessLogic.Services.Auth.Dtos;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Personal_Profiling_And_Assistance.Controllers.Account
@@ -10,10 +11,11 @@ namespace Personal_Profiling_And_Assistance.Controllers.Account
     public class AccountController : ControllerBase
     {
         private readonly IAuthService _authService;
-
-        public AccountController(IAuthService authService)
+        private readonly RoleManager<IdentityRole> _roleManager;
+        public AccountController(IAuthService authService, RoleManager<IdentityRole> roleManager)
         {
             _authService = authService;
+            _roleManager = roleManager;
         }
 
         [HttpPost("register")]
@@ -48,5 +50,34 @@ namespace Personal_Profiling_And_Assistance.Controllers.Account
             }
             return Ok(result);
         }
+
+        //[HttpGet("CreateRoles")]
+        //public async Task<IActionResult> CreateRoles()
+        //{
+        //    // Check if the "Admin" role exists
+        //    if (await _roleManager.RoleExistsAsync("Admin") == false)
+        //    {
+        //        // Create the "Admin" role
+        //        var role = new IdentityRole("Admin");
+        //        var result = await _roleManager.CreateAsync(role);
+        //        if (result.Succeeded)
+        //        {
+        //        }
+        //    }
+
+        //    // Check if the "User" role exists
+        //    if (await _roleManager.RoleExistsAsync("User") == false)
+        //    {
+        //        // Create the "User" role
+        //        var role = new IdentityRole("User");
+        //        var result = await _roleManager.CreateAsync(role);
+        //        if (result.Succeeded)
+        //        {
+        //        }
+        //    }
+
+        //    // Return a view with the result message
+        //    return RedirectToAction("Index", "Home");
+        //}
     }
 }
