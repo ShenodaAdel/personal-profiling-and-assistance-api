@@ -158,9 +158,7 @@ namespace BusinessLogic.Services.User
             {
                 u.Id,
                 u.UserName,
-                u.Email,
-                u.Gender,
-                u.ProfilePicture,
+                u.Email,              
                 u.PhoneNumber
 
             }).ToListAsync();

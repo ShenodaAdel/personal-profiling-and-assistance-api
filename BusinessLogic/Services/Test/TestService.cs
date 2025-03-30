@@ -1,4 +1,5 @@
 ﻿using BusinessLogic.DTOs;
+using BusinessLogic.Services.Test.Dtos;
 using Data;
 using Data.Models;
 using Microsoft.EntityFrameworkCore;
@@ -259,6 +260,34 @@ namespace BusinessLogic.Services.Test
 
         // End of GetAllTestsAsync method
 
+        public async Task<ViewDto> ViewTestAsync(int testId)
+        {
+            var test = await _context.Tests
+                .Include(t => t.Questions)
+                    .ThenInclude(q => q.QuestionChoices)
+                    .ThenInclude(c => c.Choice)
+                .FirstOrDefaultAsync(t => t.Id == testId);
+
+            if (test == null)
+            {
+                return null;
+            }
+
+            return new ViewDto
+            {
+                Questions = test.Questions.Select(q => new QuestionDto
+                {
+                    QuestionId = q.Id,
+                    Questioncontent = q.Content,
+                    Choices = q.QuestionChoices.Select(qc => new ChoiceDto
+                    {
+                        ChoiceId = qc.Choice.Id,
+                        ChoiceContent = qc.Choice.Content
+                    }).ToList()
+                }).ToList()
+            };
+        }
 
     }
+
 }

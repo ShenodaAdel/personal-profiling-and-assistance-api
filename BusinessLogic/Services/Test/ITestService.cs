@@ -1,4 +1,5 @@
 ﻿using BusinessLogic.DTOs;
+using BusinessLogic.Services.Test.Dtos;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,5 +15,7 @@ namespace BusinessLogic.Services.Test
         Task<ResultDto> GetAllTestsAsync();
         Task<ResultDto> GetTestByIdAsync(int id);
         Task<ResultDto> UpdateTestAsync(int id, TestAddDto dto);
+
+        Task<ViewDto> ViewTestAsync(int testId);
     }
 }

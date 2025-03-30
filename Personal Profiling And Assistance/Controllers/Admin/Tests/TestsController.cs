@@ -2,6 +2,7 @@
 using BusinessLogic.Services.Test;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace Personal_Profiling_And_Assistance.Controllers.Admin.TestController
 {
@@ -108,6 +109,18 @@ namespace Personal_Profiling_And_Assistance.Controllers.Admin.TestController
             }
 
             return Ok(result); // 200 if successfully deleted
+        }
+
+
+        [HttpGet("GetTestQuestions/{testId}")]
+        public async Task<IActionResult> GetTestQuestions(int testId)
+        {
+            var result = await _testService.ViewTestAsync(testId);
+            if (result == null)
+            {
+                return NotFound(new { message = "Test not found" });
+            }
+            return Ok(result);
         }
 
         // Admin Controller to Test
