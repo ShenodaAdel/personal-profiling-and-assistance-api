@@ -1,20 +1,11 @@
 ﻿using BusinessLogic.DTOs;
 using Data;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Data.Models;
 using Microsoft.EntityFrameworkCore;
-using BCrypt.Net;
 using BusinessLogic.Services.User.Dtos;
-using Microsoft.IdentityModel.Tokens;
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
 using Microsoft.Extensions.Configuration;
-using BusinessLogic.Services.User.DTOs;
 using Microsoft.AspNetCore.Identity;
+using BusinessLogic.Services.User.DTOs;
 
 namespace BusinessLogic.Services.User
 {
@@ -240,69 +231,83 @@ namespace BusinessLogic.Services.User
 
         // End of GetByIdUserAsync method
 
-        public async Task<ResultDto> UpdateUserAsync(string id, ApplicationUser dto)
+        public async Task<ResultDto> UpdateUserAsync(string id, string? userName, string? email, string? phoneNumber, string? gender, byte[]? profilePicture)
         {
             var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == id);
-            if (user != null)
+            if (user == null)
             {
-                try
+                return new ResultDto
                 {
-                    // Check if the new phone number already exists in the database
-                    bool PhoneCheck = await _context.Users.AnyAsync(u => u.PhoneNumber == dto.PhoneNumber);
-                    bool EmailCheck = await _context.Users.AnyAsync(u => u.Email == dto.Email);
+                    Success = false,
+                    ErrorMessage = "User not found."
+                };
+            }
 
-                    if (!PhoneCheck && !EmailCheck)
-                    {
-                        // Update the user fields with the new values from the dto
-                        user.UserName = dto.UserName;
-                        user.PhoneNumber = dto.PhoneNumber;
-                        user.Email = dto.Email;
-                        user.ProfilePicture = dto.ProfilePicture;
-                        _context.Users.Update(user);
+            try
+            {
+                bool phoneExists = await _context.Users.AnyAsync(u => u.PhoneNumber == phoneNumber && u.Id != id);
+                bool emailExists = await _context.Users.AnyAsync(u => u.Email == email && u.Id != id);
 
-                        // Save changes to the database
-                        int saveResult = await _context.SaveChangesAsync();
-                        if (saveResult > 0)
-                        {
-                            return new ResultDto
-                            {
-                                Data = user,
-                                Success = true,
-                            };
-                        }
-
-                        return new ResultDto
-                        {
-                            Success = true,
-                            ErrorMessage = "User Not Updated.",
-                        };
-                    }
-
-                    return new ResultDto
-                    {
-                        Success = true,
-                        ErrorMessage = "Phone Number or Email Address are Already Exist",
-                    };
-                }
-                catch (Exception ex)
+                if (phoneExists || emailExists)
                 {
                     return new ResultDto
                     {
                         Success = false,
-                        ErrorMessage = ex.Message
+                        ErrorMessage = "Phone Number or Email Address already exists."
                     };
                 }
-            }
 
-            return new ResultDto
+                // ✅ Update user fields
+                user.UserName = userName;
+                user.PhoneNumber = phoneNumber;
+                user.Email = email;
+                user.Gender = gender;
+
+                if (profilePicture != null)
+                {
+                    user.ProfilePicture = profilePicture; // ✅ Store byte[] in database
+                }
+
+                _context.Users.Update(user);
+
+                int saveResult = await _context.SaveChangesAsync();
+                if (saveResult > 0)
+                {
+                    return new ResultDto
+                    {
+                        Success = true,
+                        Data = new
+                        {
+                            Name = user.UserName,
+                            Email = user.Email,
+                            Phone = user.PhoneNumber,
+                            Gender = user.Gender,
+                            ProfilePicture = user.ProfilePicture // ✅ Return byte[]
+                        }
+                    };
+                }
+
+                return new ResultDto
+                {
+                    Success = false,
+                    ErrorMessage = "User update failed."
+                };
+            }
+            catch (Exception ex)
             {
-                Success = false,
-            };
+                return new ResultDto
+                {
+                    Success = false,
+                    ErrorMessage = $"An error occurred: {ex.Message}"
+                };
+            }
         }
+
+
 
         // End of UpdateUserAsync method
 
-       
+
 
     }
 }

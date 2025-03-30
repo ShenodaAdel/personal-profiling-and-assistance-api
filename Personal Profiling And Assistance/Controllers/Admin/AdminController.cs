@@ -5,6 +5,7 @@ using BusinessLogic.Services.QuestionChoice;
 using BusinessLogic.Services.QuestionChoice.Dtos;
 using BusinessLogic.Services.Test;
 using BusinessLogic.Services.User;
+using BusinessLogic.Services.User.DTOs;
 using BusinessLogic.Services.UserTest;
 using BusinessLogic.Services.UserTest.Dtos;
 using Microsoft.AspNetCore.Authorization;
@@ -65,6 +66,35 @@ namespace Personal_Profiling_And_Assistance.Controllers.Admin
 
             return Ok(result); // Returns 200 if deletion is successful
         }
+
+        [HttpPut("UpdateAdmin/{id}")]
+        public async Task<IActionResult> UpdateAdmin(string id, [FromForm] UpdateUserDto dto) // ✅ Use [FromForm]
+        {
+            if (string.IsNullOrWhiteSpace(id) || dto == null)
+            {
+                return BadRequest(new { Success = false, ErrorMessage = "Invalid request data." });
+            }
+
+            byte[]? profilePictureBytes = null;
+            if (dto.ProfilePicture != null)
+            {
+                using (var memoryStream = new MemoryStream())
+                {
+                    await dto.ProfilePicture.CopyToAsync(memoryStream);
+                    profilePictureBytes = memoryStream.ToArray(); // ✅ Convert to byte[]
+                }
+            }
+
+            var result = await _userService.UpdateUserAsync(id, dto.UserName, dto.Email, dto.PhoneNumber, dto.Gender, profilePictureBytes); // ✅ Send byte[] instead of IFormFile
+
+            if (!result.Success)
+            {
+                return BadRequest(result);
+            }
+
+            return Ok(result);
+        }
+
 
         // Admin Controller to USer
 
