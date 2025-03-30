@@ -51,6 +51,23 @@ namespace Personal_Profiling_And_Assistance.Controllers.Account
             return Ok(result);
         }
 
+        [HttpPost("LoginAdmin")]
+
+        public async Task<IActionResult> LoginAdmin([FromBody] LoginDto dto)
+        {
+            if (dto == null)
+            {
+                return BadRequest("Invalid login data.");
+            }
+            var result = await _authService.LoginAdminAsync(dto);
+            if (!result.Success)
+            {
+                return BadRequest(result);
+            }
+            return Ok(result);
+        }
+
+
         //[HttpGet("CreateRoles")]
         //public async Task<IActionResult> CreateRoles()
         //{

@@ -14,6 +14,7 @@ using Microsoft.IdentityModel.Tokens;
 
 namespace BusinessLogic.Services.Auth
 {
+
     public class AuthService : IAuthService
     {
         private readonly UserManager<ApplicationUser> _userManager;
@@ -120,6 +121,57 @@ namespace BusinessLogic.Services.Auth
                 };
             }
         }
+
+        public async Task<ResultDto> LoginAdminAsync(LoginDto dto)
+        {
+            // Find the user by email
+            var user = await _userManager.FindByEmailAsync(dto.Email);
+            if (user == null || !await _userManager.CheckPasswordAsync(user, dto.Password))
+            {
+                return new ResultDto
+                {
+                    Success = false,
+                    ErrorMessage = "Invalid credentials"
+                };
+            }
+
+            try
+            {
+                var roles = await _userManager.GetRolesAsync(user);
+
+                // ✅ Ensure only Admins can log in
+                if (!roles.Contains("Admin"))
+                {
+                    return new ResultDto
+                    {
+                        Success = false,
+                        ErrorMessage = "Access denied. Only Admins can log in."
+                    };
+                }
+
+                // Generate JWT token for the Admin user
+                var token = GenerateJwtToken(user);
+
+                return new ResultDto
+                {
+                    Success = true,
+                    Data = new
+                    {
+                        Token = token,
+                        Roles = roles
+                    }
+                };
+            }
+            catch (Exception ex)
+            {
+                return new ResultDto
+                {
+                    Success = false,
+                    ErrorMessage = $"An error occurred: {ex.Message}"
+                };
+            }
+        }
+
 
         public async Task<ResultDto> GenerateTokenAsync(string email, string password)
         {

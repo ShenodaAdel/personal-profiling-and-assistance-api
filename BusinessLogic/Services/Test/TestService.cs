@@ -241,7 +241,8 @@ namespace BusinessLogic.Services.Test
             var tests = await _context.Tests.Select(t => new
             {
                 t.Id,
-                t.Name
+                t.Name,
+                t.Questions.Count
             }).ToListAsync();
 
             // Return an empty list with a success result if no tests are found

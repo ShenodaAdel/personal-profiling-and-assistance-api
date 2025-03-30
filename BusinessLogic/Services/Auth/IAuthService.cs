@@ -10,5 +10,8 @@ namespace BusinessLogic.Services.Auth
         Task<ResultDto> LoginAsync(LoginDto dto);
         Task<ResultDto> GenerateTokenAsync(string email, string password);
 
+        Task<ResultDto> LoginAdminAsync(LoginDto dto);
+
+
     }
 }
