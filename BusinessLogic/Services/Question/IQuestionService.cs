@@ -9,7 +9,7 @@ namespace BusinessLogic.Services.Question
 {
     public interface IQuestionService
     {
-        Task<ResultDto> AddQuestionAsync(QuestionAddDto dto);
+        Task<ResultDto> AddQuestionAsync(int testId , QuestionAddDto dto);
         Task<ResultDto> DeleteQuestionAsync(int id);
         Task<ResultDto> GetAllQuestionsAsync();
         Task<ResultDto> GetQuestionByIdAsync(int id);

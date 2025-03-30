@@ -20,7 +20,7 @@ namespace BusinessLogic.Services.Question
             _context = context;
         }
 
-        public async Task<ResultDto> AddQuestionAsync(QuestionAddDto dto)
+        public async Task<ResultDto> AddQuestionAsync(int testId , QuestionAddDto dto)
         {
             
             if (string.IsNullOrWhiteSpace(dto.Content))
@@ -32,17 +32,8 @@ namespace BusinessLogic.Services.Question
                 };
             }
 
-            
-            if (!dto.TestId.HasValue)
-            {
-                return new ResultDto
-                {
-                    Success = false,
-                    ErrorMessage = "TestId is required."
-                };
-            }
-
-            var testExists = await _context.Tests.AnyAsync(t => t.Id == dto.TestId.Value);
+            // Check if the Test exists
+            var testExists = await _context.Tests.AnyAsync(t => t.Id == testId);
             if (!testExists)
             {
                 return new ResultDto
@@ -52,11 +43,22 @@ namespace BusinessLogic.Services.Question
                 };
             }
 
+            if (testId<=0)
+            {
+                return new ResultDto
+                {
+                    Success = false,
+                    ErrorMessage = "TestId Must be Positive number."
+                };
+            }
+
+
+
             
             var question = new Data.Models.Question
             {
                 Content = dto.Content,
-                TestId = dto.TestId.Value 
+                TestId = testId
             };
 
 
@@ -214,7 +216,8 @@ namespace BusinessLogic.Services.Question
                 {
                     QuestionId = q.Id,
                     Content = q.Content,
-                    TestId = q.TestId
+                    TestId = q.TestId,
+                    TestName = q.Test.Name
                 })
                 .ToListAsync();
 

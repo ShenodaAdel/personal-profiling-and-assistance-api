@@ -17,12 +17,14 @@ namespace BusinessLogic.Services.Auth
     public class AuthService : IAuthService
     {
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly RoleManager<IdentityRole> _roleManager;
         private readonly IConfiguration _configuration;
 
-        public AuthService(UserManager<ApplicationUser> userManager, IConfiguration configuration)
+        public AuthService(UserManager<ApplicationUser> userManager, IConfiguration configuration , RoleManager<IdentityRole> roleManager)
         {
             _userManager = userManager;
             _configuration = configuration;
+            _roleManager = roleManager;
         }
 
         public async Task<ResultDto> RegisterAsync(RegisterDto dto)
@@ -53,12 +55,32 @@ namespace BusinessLogic.Services.Auth
                 return resultDto;
             }
 
+            // Ensure "User" role exists
+            if (!await _roleManager.RoleExistsAsync("User"))
+            {
+                await _roleManager.CreateAsync(new IdentityRole("User"));
+            }
+
+            var addRoleResult = await _userManager.AddToRoleAsync(newUser, "User");
+            if (!addRoleResult.Succeeded)
+            {
+                resultDto.Success = false;
+                resultDto.ErrorMessage = "User created, but role assignment failed: " +
+                                         string.Join("; ", addRoleResult.Errors.Select(e => e.Description));
+                return resultDto;
+            }
+
             // Generate JWT token for the new user
             var token = GenerateJwtToken(newUser);
 
             // Wrap the token in a ResultDto and return it
             resultDto.Success = true;
-            resultDto.Data = new { Token = token }; // Ensure you wrap the token in an object if needed
+            resultDto.Data = new AuthResponseDto
+            { 
+                Token = token,
+                Role = "User"
+            }; 
+            // Ensure you wrap the token in an object if needed
             return resultDto;
         }
 
@@ -77,12 +99,16 @@ namespace BusinessLogic.Services.Auth
 
             try
             {
+                var roles = await _userManager.GetRolesAsync(user);
                 // Generate JWT token for the valid user
                 var token = GenerateJwtToken(user);
                 return new ResultDto
                 {
                     Success = true,
-                    Data = new { Token = token }
+                    Data = new { 
+                        Token = token,
+                        Roles = roles
+                    }
                 };
             }
             catch (Exception ex)

@@ -17,7 +17,7 @@ namespace Personal_Profiling_And_Assistance.Controllers.Admin.Questions
         }
 
         [HttpPost("AddQuestion")]
-        public async Task<IActionResult> AddQuestion([FromBody] QuestionAddDto dto)
+        public async Task<IActionResult> AddQuestion(int testId , [FromBody] QuestionAddDto dto)
         {
             if (!ModelState.IsValid)
             {
@@ -28,7 +28,7 @@ namespace Personal_Profiling_And_Assistance.Controllers.Admin.Questions
                 });
             }
 
-            var result = await _questionService.AddQuestionAsync(dto);
+            var result = await _questionService.AddQuestionAsync(testId , dto);
 
             if (!result.Success)
             {
