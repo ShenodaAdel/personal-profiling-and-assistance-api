@@ -303,6 +303,70 @@ namespace BusinessLogic.Services.User
             }
         }
 
+        public async Task<ResultDto> GetByIdUserDetailsAsync(string id)
+        {
+            // Validate input
+            if (string.IsNullOrWhiteSpace(id))
+            {
+                return new ResultDto
+                {
+                    Success = false,
+                    ErrorMessage = "Invalid user ID."
+                };
+            }
+
+            try
+            {
+                // Get user from database along with their tests
+                var user = await _context.Users
+                    .AsNoTracking()
+                    .Where(u => u.Id == id)
+                    .Select(u => new
+                    {
+                        Id = u.Id,
+                        Name = u.UserName,
+                        Email = u.Email,
+                        Phone = u.PhoneNumber,
+                        Gender = u.Gender,
+                        ProfilePicture = u.ProfilePicture,
+                        Tests = _context.UserTests
+                            .Where(ut => ut.UserId == u.Id)
+                            .Select(ut => new
+                            {
+                                TestId = ut.TestId,
+                                TestName = ut.Test!.Name, // Assuming "Name" exists in the Test entity
+                                DateTaken = ut.Date,
+                                Result = ut.Result
+                            })
+                            .ToList()
+                    })
+                    .FirstOrDefaultAsync();
+
+                // Handle not found case
+                if (user == null)
+                {
+                    return new ResultDto
+                    {
+                        Success = false,
+                        ErrorMessage = $"User with ID {id} not found."
+                    };
+                }
+
+                return new ResultDto
+                {
+                    Data = user,
+                    Success = true,
+                };
+            }
+            catch (Exception ex)
+            {
+                return new ResultDto
+                {
+                    Success = false,
+                    ErrorMessage = $"An error occurred: {ex.Message}"
+                };
+            }
+        }
 
 
         // End of UpdateUserAsync method
