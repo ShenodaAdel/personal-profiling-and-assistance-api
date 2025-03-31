@@ -225,7 +225,7 @@ namespace BusinessLogic.Services.UserTest
 
         // End of DeleteUserTestAsync method
 
-        public async Task<ResultDto> GetUserTestByIdAsync(int userId)
+        public async Task<ResultDto> GetUserTestByIdAsync(string userId)
         {
             var userTests = await _context.UserTests
                 .Where(ut => ut.UserId == userId)

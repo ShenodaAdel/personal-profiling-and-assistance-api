@@ -15,7 +15,7 @@ namespace BusinessLogic.Services.UserTest
         Task<ResultDto> UpdateUserTestAsync(int id, UpdateUserTestDto dto);
         Task<ResultDto> DeleteUserTestAsync(int id);
         
-        Task<ResultDto> GetUserTestByIdAsync(int id);
+        Task<ResultDto> GetUserTestByIdAsync(string id);
         Task<ResultDto> GetAllUserTestsAsync();
         
     }

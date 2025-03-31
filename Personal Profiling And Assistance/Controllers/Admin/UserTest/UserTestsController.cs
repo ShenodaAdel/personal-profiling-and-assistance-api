@@ -43,7 +43,7 @@ namespace Personal_Profiling_And_Assistance.Controllers.Admin.UserTest
         }
 
         [HttpGet("GetTestsByUserId/{userId}")]
-        public async Task<ActionResult<ResultDto>> GetTestsByUserId(int userId)
+        public async Task<ActionResult<ResultDto>> GetTestsByUserId(string userId)
         {
             try
             {

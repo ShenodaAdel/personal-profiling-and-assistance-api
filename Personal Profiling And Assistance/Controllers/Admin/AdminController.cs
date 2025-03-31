@@ -41,6 +41,17 @@ namespace Personal_Profiling_And_Assistance.Controllers.Admin
             return Ok(result); // 200 OK with user list
         }
 
+        [HttpGet("GetUserDetails/{id}")]
+        public async Task<IActionResult> GetUserDetails(string id)
+        {
+            var result = await _userService.GetByIdUserDetailsAsync(id);
+
+            if (!result.Success)
+                return NotFound(new { message = result.ErrorMessage });
+
+            return Ok(result.Data);
+        }
+
         [HttpGet("GetUserById/{id}")]
         public async Task<IActionResult> GetUserById(string id)
         {
