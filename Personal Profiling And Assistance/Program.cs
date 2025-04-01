@@ -28,7 +28,16 @@ builder.Services.AddScoped<IQuestionService, QuestionService>();
 builder.Services.AddScoped<IChoiceService, ChoiceService>();
 builder.Services.AddScoped<IQuestionChoiceService, QuestionChoiceService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
-
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAngularApp", policy =>
+    {
+        policy.WithOrigins("http://localhost:4200") // Angular's local dev URL (or the deployed URL)
+              .AllowAnyMethod()
+              .AllowAnyHeader()
+              .AllowCredentials(); // Optional, depending on your setup
+    });
+});
 
 
 
@@ -62,6 +71,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+app.UseCors("AllowAngularApp"); // Apply the CORS policy
 app.UseAuthentication();
 
 app.UseAuthorization();
