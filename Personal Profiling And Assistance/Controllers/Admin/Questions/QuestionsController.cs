@@ -1,5 +1,6 @@
 ﻿using BusinessLogic.DTOs;
 using BusinessLogic.Services.Question;
+using BusinessLogic.Services.Question.Dtos;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -97,6 +98,31 @@ namespace Personal_Profiling_And_Assistance.Controllers.Admin.Questions
             }
 
             return Ok(result); // 200 عند النجاح
+        }
+
+        [HttpPost("AddQustionWithChoice/{testId}")]
+        public async Task<IActionResult> AddQuestionWithChoices( int testId , [FromBody] QuestionAddWithChoicesDto dto)
+        {
+            if (dto == null)
+            {
+                return BadRequest(new ResultDto
+                {
+                    Success = false,
+                    ErrorMessage = "Invalid input data."
+                });
+            }
+
+            // Assuming your service method is in a class that implements the IYourService interface
+            var result = await _questionService.AddQuestionWithChoicesAsync(testId, dto);
+
+            if (result.Success)
+            {
+                return Ok(result); // Success - Return a 200 response with the result
+            }
+            else
+            {
+                return BadRequest(result); // Failure - Return a 400 response with the error message
+            }
         }
     }
 }

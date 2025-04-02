@@ -1,4 +1,5 @@
 ﻿using BusinessLogic.DTOs;
+using BusinessLogic.Services.Question.Dtos;
 using Data;
 using Data.Models;
 using Microsoft.EntityFrameworkCore;
@@ -13,16 +14,16 @@ namespace BusinessLogic.Services.Question
 {
     public class QuestionService : IQuestionService
     {
-        private readonly MyDbContext _context; 
+        private readonly MyDbContext _context;
 
         public QuestionService(MyDbContext context)
         {
             _context = context;
         }
 
-        public async Task<ResultDto> AddQuestionAsync(int testId , QuestionAddDto dto)
+        public async Task<ResultDto> AddQuestionAsync(int testId, QuestionAddDto dto)
         {
-            
+
             if (string.IsNullOrWhiteSpace(dto.Content))
             {
                 return new ResultDto
@@ -43,7 +44,7 @@ namespace BusinessLogic.Services.Question
                 };
             }
 
-            if (testId<=0)
+            if (testId <= 0)
             {
                 return new ResultDto
                 {
@@ -54,7 +55,7 @@ namespace BusinessLogic.Services.Question
 
 
 
-            
+
             var question = new Data.Models.Question
             {
                 Content = dto.Content,
@@ -120,7 +121,7 @@ namespace BusinessLogic.Services.Question
             }
 
             return new ResultDto
-            {  
+            {
                 Success = false,
                 ErrorMessage = "Question could not be deleted."
             };
@@ -135,7 +136,7 @@ namespace BusinessLogic.Services.Question
             if (question == null)
             {
                 return new ResultDto
-                {             
+                {
                     Success = false,
                     ErrorMessage = "Question not found."
                 };
@@ -178,9 +179,9 @@ namespace BusinessLogic.Services.Question
                 Success = false,
                 ErrorMessage = "Question could not be updated."
             };
-        }
+        } 
 
-        // End of UpdateQuestionAsync method
+        // End of UpdateQuestionAsync method 
 
         public async Task<ResultDto> GetQuestionByIdAsync(int id)
         {
@@ -190,7 +191,7 @@ namespace BusinessLogic.Services.Question
             {
                 return new ResultDto
                 {
-                    
+
                     Success = false,
                     ErrorMessage = "Question not found."
                 };
@@ -234,7 +235,133 @@ namespace BusinessLogic.Services.Question
                 };
         }
 
+        public async Task<ResultDto> AddQuestionWithChoicesAsync(int testId, QuestionAddWithChoicesDto dto)
+        {
+            if (string.IsNullOrWhiteSpace(dto.Content)) // Check if the Content for question is empty
+            {
+                return new ResultDto
+                {
+                    Success = false,
+                    ErrorMessage = "Question content cannot be empty."
+                };
+            }
 
-        // End of GetAllQuestionsAsync method
+            if (testId <= 0)
+            {
+                return new ResultDto
+                {
+                    Success = false,
+                    ErrorMessage = "TestId must be a positive number."
+                };
+            }
+
+            // Check if the Test exists
+            var testExists = await _context.Tests.AnyAsync(t => t.Id == testId);
+            if (!testExists)
+            {
+                return new ResultDto
+                {
+                    Success = false,
+                    ErrorMessage = "Test not found."
+                };
+            }
+
+            if (dto.Choices == null || dto.Choices.Count != 4)
+            {
+                return new ResultDto
+                {
+                    Success = false,
+                    ErrorMessage = "Exactly four choices must be provided."
+                };
+            }
+
+            // Check if the question already exists
+            var existingQuestion = await _context.Questions
+                .FirstOrDefaultAsync(q => q.TestId == testId && q.Content == dto.Content);
+
+            if (existingQuestion != null)
+            {
+                return new ResultDto
+                {
+                    Success = false,
+                    ErrorMessage = "Question already exists."
+                };
+            }
+
+            using var transaction = await _context.Database.BeginTransactionAsync();
+
+            try
+            {
+                // Create the Question
+                var question = new Data.Models.Question
+                {
+                    Content = dto.Content,
+                    TestId = testId
+                };
+
+                await _context.Questions.AddAsync(question);
+                await _context.SaveChangesAsync();
+
+                // Create Choices and link them to the Question
+                var questionChoices = new List<Data.Models.QuestionChoice>();
+                var existingChoices = new List<Data.Models.Choice>();
+
+                foreach (var choiceContent in dto.Choices)
+                {
+                    // Check if the choice already exists
+                    var existingChoice = await _context.Choices
+                        .FirstOrDefaultAsync(c => c.Content == choiceContent);
+
+                    Data.Models.Choice choice;
+                    if (existingChoice != null)
+                    {
+                        // If the choice already exists, use its ID
+                        choice = existingChoice;
+                    }
+                    else
+                    {
+                        // If the choice doesn't exist, create a new one
+                        choice = new Data.Models.Choice { Content = choiceContent };
+                        await _context.Choices.AddAsync(choice);
+                        await _context.SaveChangesAsync(); // Ensure ID is generated
+                    }
+
+                    // Link choice to the question
+                    var questionChoice = new Data.Models.QuestionChoice
+                    {
+                        QuestionId = question.Id,
+                        ChoiceId = choice.Id
+                    };
+                    questionChoices.Add(questionChoice);
+                }
+
+                await _context.QuestionChoices.AddRangeAsync(questionChoices);
+                await _context.SaveChangesAsync();
+
+                await transaction.CommitAsync();
+
+                return new ResultDto
+                {
+                    Data = new
+                    {
+                        QuestionId = question.Id,
+                        Content = question.Content,
+                        TestId = question.TestId,
+                        Choices = dto.Choices.Select((c, index) => new { ChoiceNumber = index + 1, Content = c }).ToList()
+                    },
+                    Success = true
+                };
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+                return new ResultDto
+                {
+                    Success = false,
+                    ErrorMessage = "An error occurred while adding the question and choices: " + ex.Message
+                };
+            }
+        }
+
     }
 }

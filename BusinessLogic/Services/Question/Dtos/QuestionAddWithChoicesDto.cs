@@ -4,10 +4,12 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace BusinessLogic.Services.Question
+namespace BusinessLogic.Services.Question.Dtos
 {
-    public class QuestionAddDto
+    public class QuestionAddWithChoicesDto
     {
         public string? Content { get; set; }
+
+        public List<string>? Choices { get; set; }  // List of 4 choices
     }
 }

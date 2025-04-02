@@ -1,4 +1,5 @@
 ﻿using BusinessLogic.DTOs;
+using BusinessLogic.Services.Question.Dtos;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,5 +15,6 @@ namespace BusinessLogic.Services.Question
         Task<ResultDto> GetAllQuestionsAsync();
         Task<ResultDto> GetQuestionByIdAsync(int id);
         Task<ResultDto> UpdateQuestionAsync(int id, QuestionAddDto dto);
+        Task<ResultDto> AddQuestionWithChoicesAsync(int testId, QuestionAddWithChoicesDto dto);
     }
 }
