@@ -82,16 +82,16 @@ namespace Personal_Profiling_And_Assistance.Controllers.Account
         //        }
         //    }
 
-        //    // Check if the "User" role exists
-        //    if (await _roleManager.RoleExistsAsync("User") == false)
-        //    {
-        //        // Create the "User" role
-        //        var role = new IdentityRole("User");
-        //        var result = await _roleManager.CreateAsync(role);
-        //        if (result.Succeeded)
-        //        {
-        //        }
-        //    }
+        //    //// Check if the "User" role exists
+        //    //if (await _roleManager.RoleExistsAsync("User") == false)
+        //    //{
+        //    //    // Create the "User" role
+        //    //    var role = new IdentityRole("User");
+        //    //    var result = await _roleManager.CreateAsync(role);
+        //    //    if (result.Succeeded)
+        //    //    {
+        //    //    }
+        //    //}
 
         //    // Return a view with the result message
         //    return RedirectToAction("Index", "Home");

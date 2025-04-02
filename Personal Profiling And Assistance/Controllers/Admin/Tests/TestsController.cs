@@ -47,10 +47,10 @@ namespace Personal_Profiling_And_Assistance.Controllers.Admin.TestController
 
             if (!result.Success)
             {
-                return NotFound(result); // Return 404 if no tests are found
+                return NotFound(new { message = result.ErrorMessage }); // Return 404 if no tests are found
             }
 
-            return Ok(result); // Return 200 with test data
+            return Ok(result.Data); // Return 200 with test data
         }
 
 
