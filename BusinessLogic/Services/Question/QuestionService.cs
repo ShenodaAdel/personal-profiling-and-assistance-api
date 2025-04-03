@@ -145,57 +145,133 @@ namespace BusinessLogic.Services.Question
 
         // End of DeleteQuestionAsync method
 
-        public async Task<ResultDto> UpdateQuestionAsync(int id, QuestionAddDto dto)
+        public async Task<ResultDto> EditQuestionWithChoicesAsync(int questionId, QuestionAddWithChoicesDto dto)
         {
-            var question = await _context.Questions.FindAsync(id);
+            if (string.IsNullOrWhiteSpace(dto.Content)) // Ensure the question content is valid
+            {
+                return new ResultDto
+                {
+                    Success = false,
+                    ErrorMessage = "The question content cannot be empty."
+                };
+            }
+
+            if (dto.Choices == null || dto.Choices.Count != 4) // Ensure exactly four choices are provided
+            {
+                return new ResultDto
+                {
+                    Success = false,
+                    ErrorMessage = "You must provide exactly four choices."
+                };
+            }
+
+            // Check if the question exists
+            var question = await _context.Questions
+                .Include(q => q.QuestionChoices)
+                .ThenInclude(qc => qc.Choice)
+                .FirstOrDefaultAsync(q => q.Id == questionId);
 
             if (question == null)
             {
                 return new ResultDto
                 {
                     Success = false,
-                    ErrorMessage = "Question not found."
+                    ErrorMessage = "The specified question was not found."
                 };
             }
 
-
-            // Check if the Name already exists in the database (excluding the current test)
-            bool ContentExists = await _context.Questions.AnyAsync(q => q.Content == dto.Content && q.Id != id);
-            if (ContentExists)
+            using var transaction = await _context.Database.BeginTransactionAsync();
+            try
             {
+                // Check if another question already has the same content
+                var existingQuestionWithSameContent = await _context.Questions
+                    .AnyAsync(q => q.Content == dto.Content && q.Id != question.Id);
+
+                // If another question has the same content, return an error
+                if (existingQuestionWithSameContent)
+                {
+                    return new ResultDto
+                    {
+                        Success = false,
+                        ErrorMessage = "A question with the same content already exists."
+                    };
+                }
+                else
+                {
+                    // Update the question content
+                    question.Content = dto.Content;
+                    _context.Questions.Update(question);
+                    await _context.SaveChangesAsync();
+                }
+
+                // Fetch the existing choices linked to this question
+                var existingQuestionChoices = question.QuestionChoices.ToList();
+                if (existingQuestionChoices.Count != 4)
+                {
+                    return new ResultDto
+                    {
+                        Success = false,
+                        ErrorMessage = "The question must have exactly four associated choices."
+                    };
+                }
+
+                // Update or create choices
+                for (int i = 0; i < 4; i++)
+                {
+                    var existingChoice = existingQuestionChoices[i].Choice;
+
+                    // Check if the new choice content already exists in the Choices table
+                    var choiceInDb = await _context.Choices.FirstOrDefaultAsync(c => c.Content == dto.Choices[i]);
+
+                    if (choiceInDb == null) // Choice does not exist, so create it
+                    {
+                        var newChoice = new Data.Models.Choice { Content = dto.Choices[i] };
+                        await _context.Choices.AddAsync(newChoice);
+                        await _context.SaveChangesAsync(); // Ensure ID is generated
+
+                        // Update the QuestionChoice with the new choice
+                        existingQuestionChoices[i].ChoiceId = newChoice.Id;
+                        existingQuestionChoices[i].Choice = newChoice;
+                    }
+                    else if (existingChoice.Id != choiceInDb.Id) // If choice is different, update the link
+                    {
+                        existingQuestionChoices[i].ChoiceId = choiceInDb.Id;
+                        existingQuestionChoices[i].Choice = choiceInDb;
+                    }
+                }
+
+                await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
+
+                return new ResultDto
+                {
+                    Success = true,
+                    Data = new
+                    {
+                        QuestionId = question.Id,
+                        Content = question.Content,
+                        TestId = question.TestId,
+                        Choices = question.QuestionChoices.Select(qc => new
+                        {
+                            ChoiceId = qc.Choice.Id,
+                            Content = qc.Choice.Content
+                        }).ToList()
+                    }
+                };
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
                 return new ResultDto
                 {
                     Success = false,
-                    ErrorMessage = "Question Content already exists in the database."
+                    ErrorMessage = "An error occurred while updating the question and choices: " + ex.Message
                 };
             }
-
-            // Update the content of the question
-            question.Content = dto.Content;
-
-            _context.Questions.Update(question);
-            int saveResult = await _context.SaveChangesAsync();
-
-            if (saveResult > 0)
-            {
-                return new ResultDto
-                {
-                    Data = new
-                    {
-                        question.Id,
-                        question.Content,
-                        question.TestId
-                    },
-                    Success = true
-                };
-            }
-
-            return new ResultDto
-            {
-                Success = false,
-                ErrorMessage = "Question could not be updated."
-            };
         }
+
+
+
 
         // End of UpdateQuestionAsync method 
 

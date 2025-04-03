@@ -66,7 +66,7 @@ namespace Personal_Profiling_And_Assistance.Controllers.Admin.Questions
         }
 
         [HttpPut("UpdateQuestion/{id}")]
-        public async Task<IActionResult> UpdateQuestion(int id, [FromBody] QuestionAddDto dto)
+        public async Task<IActionResult> UpdateQuestion(int id, [FromBody] QuestionAddWithChoicesDto dto)
         {
             if (!ModelState.IsValid)
             {
@@ -77,7 +77,7 @@ namespace Personal_Profiling_And_Assistance.Controllers.Admin.Questions
                 });
             }
 
-            var result = await _questionService.UpdateQuestionAsync(id, dto);
+            var result = await _questionService.EditQuestionWithChoicesAsync(id, dto);
 
             if (!result.Success)
             {

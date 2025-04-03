@@ -14,7 +14,7 @@ namespace BusinessLogic.Services.Question
         Task<ResultDto> DeleteQuestionAsync(int id);
         Task<ResultDto> GetAllQuestionsAsync();
         Task<ResultDto> GetQuestionByIdAsync(int id);
-        Task<ResultDto> UpdateQuestionAsync(int id, QuestionAddDto dto);
+        Task<ResultDto> EditQuestionWithChoicesAsync(int questionId, QuestionAddWithChoicesDto dto);
         Task<ResultDto> AddQuestionWithChoicesAsync(int testId, QuestionAddWithChoicesDto dto);
     }
 }
