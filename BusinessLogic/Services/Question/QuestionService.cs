@@ -195,19 +195,21 @@ namespace BusinessLogic.Services.Question
                 Success = false,
                 ErrorMessage = "Question could not be updated."
             };
-        } 
+        }
 
         // End of UpdateQuestionAsync method 
 
         public async Task<ResultDto> GetQuestionByIdAsync(int id)
         {
-            var question = await _context.Questions.FindAsync(id);
+            var question = await _context.Questions
+                .Include(q => q.QuestionChoices)
+                .ThenInclude(qc => qc.Choice)
+                .FirstOrDefaultAsync(q => q.Id == id);
 
             if (question == null)
             {
                 return new ResultDto
                 {
-
                     Success = false,
                     ErrorMessage = "Question not found."
                 };
@@ -218,11 +220,17 @@ namespace BusinessLogic.Services.Question
                 Data = new
                 {
                     question.Content,
-                    question.TestId
+                    question.TestId,
+                    Choices = question.QuestionChoices.Select(qc => new
+                    {
+                        qc.Choice.Id,
+                        qc.Choice.Content
+                    }).ToList()
                 },
                 Success = true
             };
         }
+
 
         // End of GetQuestionByIdAsync method
 
