@@ -2,6 +2,7 @@
 {
     public class ViewDto
     {
+        public string? TestName { get; set; }
         public List<QuestionDto> Questions { get; set; }
     }
 

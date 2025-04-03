@@ -16,6 +16,6 @@ namespace BusinessLogic.Services.Test
         Task<ResultDto> GetTestByIdAsync(int id);
         Task<ResultDto> UpdateTestAsync(int id, TestAddDto dto);
 
-        Task<ViewDto> ViewTestAsync(int testId);
+        Task<ResultDto> ViewTestAsync(int testId);
     }
 }

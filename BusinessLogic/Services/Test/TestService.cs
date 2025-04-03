@@ -261,7 +261,7 @@ namespace BusinessLogic.Services.Test
 
         // End of GetAllTestsAsync method
 
-        public async Task<ViewDto> ViewTestAsync(int testId)
+        public async Task<ResultDto> ViewTestAsync(int testId)
         {
             var test = await _context.Tests
                 .Include(t => t.Questions)
@@ -271,23 +271,33 @@ namespace BusinessLogic.Services.Test
 
             if (test == null)
             {
-                return null;
+                return new ResultDto
+                {
+                    Success = false,
+                    ErrorMessage = "Test not found."  // Detailed error message
+                };
             }
 
-            return new ViewDto
+            return new ResultDto
             {
-                Questions = test.Questions.Select(q => new QuestionDto
+                Success = true,
+                Data = new ViewDto
                 {
-                    QuestionId = q.Id,
-                    Questioncontent = q.Content,
-                    Choices = q.QuestionChoices.Select(qc => new ChoiceDto
+                    TestName = test.Name,
+                    Questions = test.Questions.Select(q => new QuestionDto
                     {
-                        ChoiceId = qc.Choice.Id,
-                        ChoiceContent = qc.Choice.Content
+                        QuestionId = q.Id,
+                        Questioncontent = q.Content,
+                        Choices = q.QuestionChoices.Select(qc => new ChoiceDto
+                        {
+                            ChoiceId = qc.Choice.Id,
+                            ChoiceContent = qc.Choice.Content
+                        }).ToList()
                     }).ToList()
-                }).ToList()
+                }
             };
         }
+
 
     }
 
