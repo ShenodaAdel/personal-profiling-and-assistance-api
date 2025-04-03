@@ -93,7 +93,9 @@ namespace BusinessLogic.Services.Question
 
         public async Task<ResultDto> DeleteQuestionAsync(int id)
         {
-            var question = await _context.Questions.FindAsync(id);
+            var question = await _context.Questions
+                .Include(q => q.QuestionChoices)
+                .FirstOrDefaultAsync(q => q.Id == id);
 
             if (question == null)
             {
@@ -104,28 +106,42 @@ namespace BusinessLogic.Services.Question
                 };
             }
 
-            _context.Questions.Remove(question);
-            int saveResult = await _context.SaveChangesAsync();
-
-            if (saveResult > 0)
+            using var transaction = await _context.Database.BeginTransactionAsync();
+            try
             {
+                // Get the related QuestionChoices (exactly 4 per question)
+                var questionChoices = question.QuestionChoices.ToList();
+
+                // Remove QuestionChoices (unlinking choices from this question)
+                _context.QuestionChoices.RemoveRange(questionChoices);
+
+                // Remove the Question itself
+                _context.Questions.Remove(question);
+
+                await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
+
                 return new ResultDto
                 {
                     Success = true,
                     Data = new
                     {
-                        question.Id,
-                        question.Content
+                        QuestionId = id,
+                        Message = "Question and its related question choices deleted successfully."
                     }
                 };
             }
-
-            return new ResultDto
+            catch (Exception ex)
             {
-                Success = false,
-                ErrorMessage = "Question could not be deleted."
-            };
+                await transaction.RollbackAsync();
+                return new ResultDto
+                {
+                    Success = false,
+                    ErrorMessage = "An error occurred while deleting the question and its choices: " + ex.Message
+                };
+            }
         }
+
 
         // End of DeleteQuestionAsync method
 
