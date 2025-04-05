@@ -96,7 +96,7 @@ namespace Personal_Profiling_And_Assistance.Controllers.Admin
                 }
             }
 
-            var result = await _userService.UpdateUserAsync(id, dto.UserName, dto.Email, dto.PhoneNumber, dto.Gender, profilePictureBytes); // ✅ Send byte[] instead of IFormFile
+            var result = await _userService.UpdateUserAsync(id, dto.UserName,dto.PhoneNumber, dto.Gender, profilePictureBytes); // ✅ Send byte[] instead of IFormFile
 
             if (!result.Success)
             {

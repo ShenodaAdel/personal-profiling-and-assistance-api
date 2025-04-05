@@ -18,7 +18,7 @@ namespace Personal_Profiling_And_Assistance.Controllers.Admin.UserTest
         }
 
         [HttpPost("AddTestToUser")]
-        public async Task<ActionResult<ResultDto>> AddUserTestAsync([FromBody] UserTestDto dto)
+        public async Task<ActionResult<ResultDto>> AddUserTestAsync(string userId , int testId , UserTestDto dto)   
         {
             try
             {
@@ -27,7 +27,7 @@ namespace Personal_Profiling_And_Assistance.Controllers.Admin.UserTest
                     return BadRequest(new ResultDto { Success = false, ErrorMessage = "Invalid request data." });
                 }
 
-                var result = await _userTestService.AddUserTestAsync(dto);
+                var result = await _userTestService.AddUserTestAsync(userId, testId, dto);
 
                 if (!result.Success)
                 {

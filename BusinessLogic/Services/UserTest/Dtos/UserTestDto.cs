@@ -10,9 +10,6 @@ namespace BusinessLogic.Services.UserTest.Dtos
     {
         public DateTime Date { get; set; } 
         public string Result { get; set; } = default!;
-        public string? UserId { get; set; } 
-        public int? TestId { get; set; }
-
 
     }
 }

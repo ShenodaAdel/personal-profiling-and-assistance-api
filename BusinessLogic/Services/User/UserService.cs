@@ -232,7 +232,7 @@ namespace BusinessLogic.Services.User
 
         // End of GetByIdUserAsync method
 
-        public async Task<ResultDto> UpdateUserAsync(string id, string? userName, string? email, string? phoneNumber, string? gender, byte[]? profilePicture)
+        public async Task<ResultDto> UpdateUserAsync(string id, string? userName, string? phoneNumber, string? gender, byte[]? profilePicture)
         {
             var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == id);
             if (user == null)
@@ -247,21 +247,20 @@ namespace BusinessLogic.Services.User
             try
             {
                 bool phoneExists = await _context.Users.AnyAsync(u => u.PhoneNumber == phoneNumber && u.Id != id);
-                bool emailExists = await _context.Users.AnyAsync(u => u.Email == email && u.Id != id);
+                
 
-                if (phoneExists || emailExists)
+                if (phoneExists)
                 {
                     return new ResultDto
                     {
                         Success = false,
-                        ErrorMessage = "Phone Number or Email Address already exists."
+                        ErrorMessage = "Phone Number already exists."
                     };
                 }
 
                 // ✅ Update user fields
                 user.UserName = userName;
                 user.PhoneNumber = phoneNumber;
-                user.Email = email;
                 user.Gender = gender;
 
                 if (profilePicture != null)
@@ -280,7 +279,6 @@ namespace BusinessLogic.Services.User
                         Data = new
                         {
                             Name = user.UserName,
-                            Email = user.Email,
                             Phone = user.PhoneNumber,
                             Gender = user.Gender,
                             ProfilePicture = user.ProfilePicture // ✅ Return byte[]

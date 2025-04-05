@@ -17,7 +17,7 @@ namespace BusinessLogic.Services.User
         Task<ResultDto> GetAllUserAsync();
         Task<ResultDto> GetByIdUserAsync(string id);
         Task<ResultDto> GetByIdUserDetailsAsync(string id);
-        Task<ResultDto> UpdateUserAsync(string id, string? userName, string? email, string? phoneNumber, string? gender, byte[]? profilePicture);  
+        Task<ResultDto> UpdateUserAsync(string id, string? userName, string? phoneNumber, string? gender, byte[]? profilePicture);  
 
     }
 }

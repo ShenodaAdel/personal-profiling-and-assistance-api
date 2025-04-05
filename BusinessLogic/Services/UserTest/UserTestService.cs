@@ -19,7 +19,7 @@ namespace BusinessLogic.Services.UserTest
             _context = context;
         }
 
-        public async Task<ResultDto> AddUserTestAsync(UserTestDto dto)
+        public async Task<ResultDto> AddUserTestAsync(string userId , int testId , UserTestDto dto)
         {
             // Validate required fields
             if (string.IsNullOrWhiteSpace(dto.Result))
@@ -32,7 +32,7 @@ namespace BusinessLogic.Services.UserTest
             }
 
             // Validate UserId
-            if (dto.UserId == null)
+            if (userId == null)
             {
                 return new ResultDto
                 {
@@ -42,7 +42,7 @@ namespace BusinessLogic.Services.UserTest
             }
 
             // Validate TestId
-            if (dto.TestId == null)
+            if (testId == null)
             {
                 return new ResultDto
                 {
@@ -52,7 +52,7 @@ namespace BusinessLogic.Services.UserTest
             }
 
             // Check if User exists
-            var user = await _context.Users.FindAsync(dto.UserId);
+            var user = await _context.Users.FindAsync(userId);
             if (user == null)
             {
                 return new ResultDto
@@ -63,7 +63,7 @@ namespace BusinessLogic.Services.UserTest
             }
 
             // Check if Test exists
-            var test = await _context.Tests.FindAsync(dto.TestId);
+            var test = await _context.Tests.FindAsync(testId);
             if (test == null)
             {
                 return new ResultDto
@@ -78,8 +78,8 @@ namespace BusinessLogic.Services.UserTest
             {
                 Date = dto.Date,
                 Result = dto.Result,
-                UserId = dto.UserId,
-                TestId = dto.TestId
+                UserId = userId,
+                TestId = testId
             };
 
             await _context.UserTests.AddAsync(userTest);
