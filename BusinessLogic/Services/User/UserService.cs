@@ -95,7 +95,7 @@ namespace BusinessLogic.Services.User
 
         public async Task<ResultDto> DeleteUserByIdAsync(string id)
         {
-            var user = await _context.Users.FindAsync(id);
+            var user = await _userManager.FindByIdAsync(id);
 
             if (user == null)
             {
@@ -106,40 +106,34 @@ namespace BusinessLogic.Services.User
                 };
             }
 
-            try
+            // Delete related UserTests first
+            var userTests = _context.UserTests.Where(ut => ut.UserId == id).ToList();
+            if (userTests.Any())
             {
-                _context.Users.Remove(user);
-                var saveResult = await _context.SaveChangesAsync();
-
-                if (saveResult > 0)
-                {
-                    return new ResultDto
-                    {
-                        Data = new
-                        {
-                            user.Id,
-                            user.UserName,
-                            user.Email
-                        },
-                        Success = true,
-                    };
-                }
-
-                return new ResultDto
-                {
-                    Success = false,
-                    ErrorMessage = "Failed to delete user",
-                };
+                _context.UserTests.RemoveRange(userTests);
+                await _context.SaveChangesAsync();
             }
-            catch (Exception ex)
+
+            // Then delete the user
+            var result = await _userManager.DeleteAsync(user);
+
+            if (result.Succeeded)
             {
                 return new ResultDto
                 {
-                    Success = false,
-                    ErrorMessage = ex.Message,
+                    Success = true,
+                    Data = new { user.Id, user.UserName, user.Email }
                 };
             }
+
+            return new ResultDto
+            {
+                Success = false,
+                ErrorMessage = string.Join(", ", result.Errors.Select(e => e.Description))
+            };
         }
+
+
 
         // // End of DeleteUserByIdAsync method
 

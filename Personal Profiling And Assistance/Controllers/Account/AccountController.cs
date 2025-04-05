@@ -53,7 +53,7 @@ namespace Personal_Profiling_And_Assistance.Controllers.Account
 
         [HttpPost("LoginAdmin")]
 
-        public async Task<IActionResult> LoginAdmin([FromBody] LoginDto dto)
+        public async Task<IActionResult> LoginAdmin( LoginDto dto)
         {
             if (dto == null)
             {

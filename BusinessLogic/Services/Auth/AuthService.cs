@@ -10,6 +10,7 @@ using BusinessLogic.Services.Auth.Dtos;
 using Data.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 
 namespace BusinessLogic.Services.Auth
@@ -20,12 +21,14 @@ namespace BusinessLogic.Services.Auth
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly RoleManager<IdentityRole> _roleManager;
         private readonly IConfiguration _configuration;
+        private readonly ILogger<AuthService> _logger;
 
-        public AuthService(UserManager<ApplicationUser> userManager, IConfiguration configuration , RoleManager<IdentityRole> roleManager)
+        public AuthService(UserManager<ApplicationUser> userManager, IConfiguration configuration , RoleManager<IdentityRole> roleManager , ILogger<AuthService>logger)
         {
             _userManager = userManager;
             _configuration = configuration;
             _roleManager = roleManager;
+            _logger = logger;
         }
 
         public async Task<ResultDto> RegisterAsync(RegisterDto dto)
@@ -72,7 +75,7 @@ namespace BusinessLogic.Services.Auth
             }
 
             // Generate JWT token for the new user
-            var token = GenerateJwtToken(newUser);
+            var token = await GenerateJwtToken(newUser);
 
             // Wrap the token in a ResultDto and return it
             resultDto.Success = true;
@@ -102,7 +105,7 @@ namespace BusinessLogic.Services.Auth
             {
                 var roles = await _userManager.GetRolesAsync(user);
                 // Generate JWT token for the valid user
-                var token = GenerateJwtToken(user);
+                var token = await GenerateJwtToken(user);
                 return new ResultDto
                 {
                     Success = true,
@@ -124,6 +127,16 @@ namespace BusinessLogic.Services.Auth
 
         public async Task<ResultDto> LoginAdminAsync(LoginDto dto)
         {
+            // Validate input
+            if (dto == null || string.IsNullOrEmpty(dto.Email) || string.IsNullOrEmpty(dto.Password))
+            {
+                return new ResultDto
+                {
+                    Success = false,
+                    ErrorMessage = "Email and password are required"
+                };
+            }
+
             // Find the user by email
             var user = await _userManager.FindByEmailAsync(dto.Email);
             if (user == null || !await _userManager.CheckPasswordAsync(user, dto.Password))
@@ -150,7 +163,15 @@ namespace BusinessLogic.Services.Auth
                 }
 
                 // Generate JWT token for the Admin user
-                var token = GenerateJwtToken(user);
+                var token = await GenerateJwtToken(user);
+                if (string.IsNullOrEmpty(token))
+                {
+                    return new ResultDto
+                    {
+                        Success = false,
+                        ErrorMessage = "Token generation failed"
+                    };
+                }
 
                 return new ResultDto
                 {
@@ -164,10 +185,14 @@ namespace BusinessLogic.Services.Auth
             }
             catch (Exception ex)
             {
+                // Log the full exception details here
+                _logger.LogError(ex, "Error during admin login");
+
                 return new ResultDto
                 {
                     Success = false,
-                    ErrorMessage = $"An error occurred: {ex.Message}"
+                    ErrorMessage = "An error occurred during login"
+                    // Consider not exposing full exception message in production
                 };
             }
         }
@@ -189,7 +214,7 @@ namespace BusinessLogic.Services.Auth
             try
             {
                 // Generate JWT token for the valid user
-                var token = GenerateJwtToken(user);
+                var token = await GenerateJwtToken(user);
 
                 // Wrap the token in a ResultDto and return it
                 return new ResultDto
@@ -209,42 +234,50 @@ namespace BusinessLogic.Services.Auth
         }
 
         // Private helper method to generate a JWT token for a given user
-        private string GenerateJwtToken(ApplicationUser user)
+        private async Task<string> GenerateJwtToken(ApplicationUser user)
         {
-            // Fetch the JWT settings from configuration
-            var jwtSettings = _configuration.GetSection("JWT");
-            var issuer = jwtSettings.GetValue<string>("Issuer");
-            var audience = jwtSettings.GetValue<string>("Audience");
-            var secretKey = jwtSettings.GetValue<string>("SecretKey");
-            var durationInDays = jwtSettings.GetValue<int>("DurationInDays");
+            if (user == null)
+                throw new ArgumentNullException(nameof(user));
 
-            // Create the security key and signing credentials
+            // 1. Read JWT settings (with validation)
+            var secretKey = _configuration["JWT:SecretKey"];
+            if (string.IsNullOrEmpty(secretKey))
+                throw new Exception("JWT SecretKey is missing in configuration!");
+
+            var issuer = _configuration["JWT:Issuer"] ?? "SecureApi";
+            var audience = _configuration["JWT:Audience"] ?? "SecureApiUser";
+            var durationInDays = _configuration.GetValue<int>("JWT:DurationInDays", 30);
+
+            // 2. Validate user properties
+            if (string.IsNullOrEmpty(user.Id))
+                throw new Exception("User Id is missing!");
+            if (string.IsNullOrEmpty(user.Email))
+                throw new Exception("User Email is missing!");
+
+            // 3. Generate token
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
             var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
-            // Create claims for the user
+            var roles = await _userManager.GetRolesAsync(user) ?? new List<string>(); // Handle null roles
+
             var claims = new List<Claim>
-            {
-                new Claim(ClaimTypes.NameIdentifier, user.Id),
-                new Claim(ClaimTypes.Name, user.UserName),
-                new Claim(ClaimTypes.Email, user.Email),
-                new Claim(ClaimTypes.Role, "User") // Add additional roles if needed
-            };
+    {
+        new Claim(ClaimTypes.NameIdentifier, user.Id),
+        new Claim(ClaimTypes.Email, user.Email),
+        new Claim(ClaimTypes.Name, user.UserName ?? "") // Handle null UserName
+    };
 
-            // Create the token descriptor
-            var tokenDescriptor = new SecurityTokenDescriptor
-            {
-                Issuer = issuer,
-                Audience = audience,
-                Expires = DateTime.UtcNow.AddDays(durationInDays),
-                SigningCredentials = credentials,
-                Subject = new ClaimsIdentity(claims)
-            };
+            claims.AddRange(roles.Select(role => new Claim(ClaimTypes.Role, role)));
 
-            // Generate the token
-            var tokenHandler = new JwtSecurityTokenHandler();
-            var token = tokenHandler.CreateToken(tokenDescriptor);
-            return tokenHandler.WriteToken(token);
+            var token = new JwtSecurityToken(
+                issuer: issuer,
+                audience: audience,
+                claims: claims,
+                expires: DateTime.UtcNow.AddDays(durationInDays),
+                signingCredentials: credentials
+            );
+
+            return new JwtSecurityTokenHandler().WriteToken(token);
         }
     }
 }
