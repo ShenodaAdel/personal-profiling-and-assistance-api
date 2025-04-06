@@ -385,16 +385,32 @@ namespace BusinessLogic.Services.User
                                    select user)
                                    .CountAsync();
 
-            // 3. Count UserTests for users who are not Admins
-            var userTestCount = await _context.UserTests
-                .Where(ut => !_context.UserRoles
-                    .Any(ur => ur.UserId == ut.UserId && ur.RoleId == adminRoleId)) // Exclude Admins
-                .CountAsync();
+
+            var userTestCount = await _context.UserTests.CountAsync();
+
+            var testCount = await _context.Tests.CountAsync();
+
+            // 4. Get the count of user tests for each test in the system
+            var testCounts = await _context.UserTests
+                .Join(_context.Tests, ut => ut.TestId, t => t.Id, (ut, t) => new { ut, t })  // Join UserTests with Tests
+                .GroupBy(x => x.t.Name)  // Group by Test Name
+                .Select(group => new
+                {
+                    TestName = group.Key,  // Test Name
+                    UserTestCount = group.Count(), // Count the number of user tests for this test
+                    Ratio = (double)group.Count() / userTestCount * 100  
+                })
+                .ToListAsync();
 
             // Return both counts
             return new ResultDto
-            {
-                Data = new { UserCount = userCount, UserTestCount = userTestCount },
+            { 
+                Data = new { 
+                    UserCount = userCount, 
+                    UserTestCount = userTestCount,
+                    TestCount = testCount,
+                    TestCounts = testCounts
+                },
                 Success = true
             };
         }
