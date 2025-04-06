@@ -111,7 +111,8 @@ namespace BusinessLogic.Services.Auth
                     Success = true,
                     Data = new { 
                         Token = token,
-                        Roles = roles
+                        Roles = roles,
+                        UserId = user.Id
                     }
                 };
             }
@@ -179,7 +180,8 @@ namespace BusinessLogic.Services.Auth
                     Data = new
                     {
                         Token = token,
-                        Roles = roles
+                        Roles = roles,
+                        UserId = user.Id
                     }
                 };
             }
@@ -246,7 +248,7 @@ namespace BusinessLogic.Services.Auth
 
             var issuer = _configuration["JWT:Issuer"] ?? "SecureApi";
             var audience = _configuration["JWT:Audience"] ?? "SecureApiUser";
-            var durationInDays = _configuration.GetValue<int>("JWT:DurationInDays", 30);
+            var durationInDays = _configuration.GetValue<int>("JWT:DurationInDays", 30); 
 
             // 2. Validate user properties
             if (string.IsNullOrEmpty(user.Id))
