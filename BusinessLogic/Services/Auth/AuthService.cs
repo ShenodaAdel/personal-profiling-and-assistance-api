@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using BusinessLogic.DTOs;
 using BusinessLogic.Services.Auth.Dtos;
+using BusinessLogic.Services.Emails;
 using Data.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
@@ -22,13 +23,14 @@ namespace BusinessLogic.Services.Auth
         private readonly RoleManager<IdentityRole> _roleManager;
         private readonly IConfiguration _configuration;
         private readonly ILogger<AuthService> _logger;
-
-        public AuthService(UserManager<ApplicationUser> userManager, IConfiguration configuration , RoleManager<IdentityRole> roleManager , ILogger<AuthService>logger)
+        private readonly IEmailServices _emailService;
+        public AuthService(UserManager<ApplicationUser> userManager, IEmailServices emailService, IConfiguration configuration , RoleManager<IdentityRole> roleManager , ILogger<AuthService>logger)
         {
             _userManager = userManager;
             _configuration = configuration;
             _roleManager = roleManager;
             _logger = logger;
+            _emailService = emailService;
         }
 
         public async Task<ResultDto> RegisterAsync(RegisterDto dto)
@@ -199,6 +201,81 @@ namespace BusinessLogic.Services.Auth
             }
         }
 
+        public async Task<ResultDto> ForgotPasswordAsync(ForgetPasswordDto dto)
+        {
+            var resultDto = new ResultDto();
+
+            var user = await _userManager.FindByEmailAsync(dto.Email);
+            if (user == null)
+            {
+                // Don't reveal that the user does not exist
+                resultDto.Success = true;
+                return resultDto;
+            }
+
+            var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+
+            // Encode token because it can have unsafe characters for URLs
+            var encodedToken = System.Web.HttpUtility.UrlEncode(token);
+
+            // Build a reset URL (this should be front-end URL)
+            var resetUrl = $"https://yourfrontend.com/reset-password?email={dto.Email}&token={encodedToken}";
+
+            try
+            {
+                // Send the reset email
+                await _emailService.SendResetPasswordEmailAsync(dto.Email, resetUrl);
+                resultDto.Success = true;
+                resultDto.Data = resetUrl;
+            }
+            catch (Exception ex)
+            {
+                // Log the error and return failure result
+                _logger.LogError(ex, "Error sending reset password email");
+                resultDto.Success = false;
+                resultDto.ErrorMessage = "There was an error sending the password reset email.";
+            }
+
+            return resultDto;
+        }
+        public async Task<ResultDto> ResetPasswordAsync(ResetPasswordDto dto)
+        {
+            var resultDto = new ResultDto();
+
+            var user = await _userManager.FindByEmailAsync(dto.Email);
+            if (user == null)
+            {
+                resultDto.Success = false;
+                resultDto.ErrorMessage = "Invalid request.";
+                return resultDto;
+            }
+
+            // Decode token if needed
+            var decodedToken = System.Web.HttpUtility.UrlDecode(dto.Token);
+
+            var resetPassResult = await _userManager.ResetPasswordAsync(user, decodedToken, dto.NewPassword);
+            if (!resetPassResult.Succeeded)
+            {
+                resultDto.Success = false;
+                resultDto.ErrorMessage = string.Join("; ", resetPassResult.Errors.Select(e => e.Description));
+                return resultDto;
+            }
+
+            // Send confirmation email if reset is successful
+            try
+            {
+                await _emailService.SendResetPasswordEmailAsync(dto.Email, "Your password has been successfully reset.");
+                resultDto.Success = true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error sending confirmation email after password reset.");
+                resultDto.Success = true; // Still return success for password reset, but email failed
+                resultDto.ErrorMessage = "Password reset successful, but there was an error sending the confirmation email.";
+            }
+
+            return resultDto;
+        }
 
         public async Task<ResultDto> GenerateTokenAsync(string email, string password)
         {

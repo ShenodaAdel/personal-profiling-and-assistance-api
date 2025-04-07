@@ -1,6 +1,8 @@
 using BusinessLogic.Extensions;
 using BusinessLogic.Services.Auth;
 using BusinessLogic.Services.Choice;
+using BusinessLogic.Services.Emails.Dtos;
+using BusinessLogic.Services.Emails;
 using BusinessLogic.Services.Question;
 using BusinessLogic.Services.QuestionChoice;
 using BusinessLogic.Services.Test;
@@ -40,8 +42,11 @@ builder.Services.AddCors(options =>
               .AllowCredentials(); // Optional, depending on your setup
     });
 });
+builder.Services.Configure<EmailSettingsDto>(builder.Configuration.GetSection("EmailSettings"));
+builder.Services.AddScoped<IEmailServices, EmailService>();
 
-    
+
+
 
 
 
