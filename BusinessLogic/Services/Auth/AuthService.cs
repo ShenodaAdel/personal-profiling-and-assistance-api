@@ -4,36 +4,65 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Security.Claims;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using BusinessLogic.DTOs;
 using BusinessLogic.Services.Auth.Dtos;
+using BusinessLogic.Services.Emails;
 using Data.Models;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 
-namespace BusinessLogic.Services.Auth
+namespace BusinessLogic.Services.Auth 
 {
 
-    public class AuthService : IAuthService
+    public class AuthService : IAuthService 
     {
-        private readonly UserManager<ApplicationUser> _userManager;
-        private readonly RoleManager<IdentityRole> _roleManager;
-        private readonly IConfiguration _configuration;
-        private readonly ILogger<AuthService> _logger;
-
-        public AuthService(UserManager<ApplicationUser> userManager, IConfiguration configuration , RoleManager<IdentityRole> roleManager , ILogger<AuthService>logger)
+        private readonly UserManager<ApplicationUser> _userManager; 
+        private readonly RoleManager<IdentityRole> _roleManager; 
+        private readonly IConfiguration _configuration; 
+        private readonly ILogger<AuthService> _logger; 
+        private readonly IEmailServices _emailService; 
+        public AuthService(UserManager<ApplicationUser> userManager, IEmailServices emailService, IConfiguration configuration , RoleManager<IdentityRole> roleManager , ILogger<AuthService>logger)
         {
             _userManager = userManager;
             _configuration = configuration;
             _roleManager = roleManager;
             _logger = logger;
+            _emailService = emailService;
         }
 
         public async Task<ResultDto> RegisterAsync(RegisterDto dto)
         {
             var resultDto = new ResultDto();
+
+            // Validate Email
+            if (string.IsNullOrWhiteSpace(dto.Email) || !IsValidEmail(dto.Email))
+            {
+                resultDto.Success = false;
+                resultDto.ErrorMessage = "Invalid email format.";
+                return resultDto;
+            }
+
+            // Validate Username
+            if (string.IsNullOrWhiteSpace(dto.UserName) || !IsValidUserName(dto.UserName))
+            {
+                resultDto.Success = false;
+                resultDto.ErrorMessage = "Invalid username. It must be 3-20 characters long and contain only letters, numbers, or underscores.";
+                return resultDto;
+            }
+
+            // Check if username already exists
+            var existingUserByUsername = await _userManager.Users.FirstOrDefaultAsync(u => u.UserName == dto.UserName);
+            if (existingUserByUsername != null)
+            {
+                resultDto.Success = false;
+                resultDto.ErrorMessage = "Username is already taken.";
+                return resultDto;
+            }
 
             // Check if the user already exists
             var existingUser = await _userManager.FindByEmailAsync(dto.Email);
@@ -82,7 +111,8 @@ namespace BusinessLogic.Services.Auth
             resultDto.Data = new AuthResponseDto
             { 
                 Token = token,
-                Role = "User"
+                Role = "User",
+                UserId = newUser.Id
             }; 
             // Ensure you wrap the token in an object if needed
             return resultDto;
@@ -111,7 +141,8 @@ namespace BusinessLogic.Services.Auth
                     Success = true,
                     Data = new { 
                         Token = token,
-                        Roles = roles
+                        Roles = roles,
+                        UserId = user.Id
                     }
                 };
             }
@@ -179,7 +210,8 @@ namespace BusinessLogic.Services.Auth
                     Data = new
                     {
                         Token = token,
-                        Roles = roles
+                        Roles = roles,
+                        UserId = user.Id
                     }
                 };
             }
@@ -197,6 +229,81 @@ namespace BusinessLogic.Services.Auth
             }
         }
 
+        public async Task<ResultDto> ForgotPasswordAsync(ForgetPasswordDto dto)
+        {
+            var resultDto = new ResultDto();
+
+            var user = await _userManager.FindByEmailAsync(dto.Email);
+            if (user == null)
+            {
+                // Don't reveal that the user does not exist
+                resultDto.Success = true;
+                return resultDto;
+            }
+
+            var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+
+            // Encode token because it can have unsafe characters for URLs
+            var encodedToken = System.Web.HttpUtility.UrlEncode(token);
+
+            // Build a reset URL (this should be front-end URL)
+            var resetUrl = $"https://yourfrontend.com/reset-password?email={dto.Email}&token={encodedToken}";
+
+            try
+            {
+                // Send the reset email
+                await _emailService.SendResetPasswordEmailAsync(dto.Email, resetUrl);
+                resultDto.Success = true;
+                resultDto.Data = resetUrl;
+            }
+            catch (Exception ex)
+            {
+                // Log the error and return failure result
+                _logger.LogError(ex, "Error sending reset password email");
+                resultDto.Success = false;
+                resultDto.ErrorMessage = "There was an error sending the password reset email.";
+            }
+
+            return resultDto;
+        }
+        public async Task<ResultDto> ResetPasswordAsync(ResetPasswordDto dto)
+        {
+            var resultDto = new ResultDto();
+
+            var user = await _userManager.FindByEmailAsync(dto.Email);
+            if (user == null)
+            {
+                resultDto.Success = false;
+                resultDto.ErrorMessage = "Invalid request.";
+                return resultDto;
+            }
+
+            // Decode token if needed
+            var decodedToken = System.Web.HttpUtility.UrlDecode(dto.Token);
+
+            var resetPassResult = await _userManager.ResetPasswordAsync(user, decodedToken, dto.NewPassword);
+            if (!resetPassResult.Succeeded)
+            {
+                resultDto.Success = false;
+                resultDto.ErrorMessage = string.Join("; ", resetPassResult.Errors.Select(e => e.Description));
+                return resultDto;
+            }
+
+            // Send confirmation email if reset is successful
+            try
+            {
+                await _emailService.SendResetPasswordEmailAsync(dto.Email, "Your password has been successfully reset.");
+                resultDto.Success = true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error sending confirmation email after password reset.");
+                resultDto.Success = true; // Still return success for password reset, but email failed
+                resultDto.ErrorMessage = "Password reset successful, but there was an error sending the confirmation email.";
+            }
+
+            return resultDto;
+        }
 
         public async Task<ResultDto> GenerateTokenAsync(string email, string password)
         {
@@ -246,7 +353,7 @@ namespace BusinessLogic.Services.Auth
 
             var issuer = _configuration["JWT:Issuer"] ?? "SecureApi";
             var audience = _configuration["JWT:Audience"] ?? "SecureApiUser";
-            var durationInDays = _configuration.GetValue<int>("JWT:DurationInDays", 30);
+            var durationInDays = _configuration.GetValue<int>("JWT:DurationInDays", 30); 
 
             // 2. Validate user properties
             if (string.IsNullOrEmpty(user.Id))
@@ -285,6 +392,35 @@ namespace BusinessLogic.Services.Auth
             );
 
             return new JwtSecurityTokenHandler().WriteToken(token);
+        }
+
+        private bool IsValidEmail(string email)
+        {
+            if (string.IsNullOrWhiteSpace(email))
+                return false;
+
+            try
+            {
+                // Use simple regex for email validation
+                var emailRegex = new Regex(@"^[^@\s]+@[^@\s]+\.[^@\s]+$", RegexOptions.IgnoreCase);
+                return emailRegex.IsMatch(email);
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        private bool IsValidUserName(string userName)
+        {
+            if (string.IsNullOrWhiteSpace(userName))
+                return false;
+
+            if (userName.Length < 3 || userName.Length > 20)
+                return false;
+
+            // Only allow letters, numbers, underscores
+            return System.Text.RegularExpressions.Regex.IsMatch(userName, @"^[a-zA-Z0-9_]+$");
         }
     }
 }

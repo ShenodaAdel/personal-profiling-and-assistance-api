@@ -15,13 +15,15 @@ namespace BusinessLogic.Services.User
         private readonly IConfiguration _configuration;
         private readonly UserManager<Data.Models.ApplicationUser> _userManager;
         private readonly SignInManager<Data.Models.ApplicationUser> _signManager;
+        private readonly RoleManager<IdentityRole> _roleManager;
 
-        public UserService(MyDbContext context, UserManager<Data.Models.ApplicationUser> userManager, IConfiguration configuration, SignInManager<Data.Models.ApplicationUser> signManager)
+        public UserService(MyDbContext context, UserManager<Data.Models.ApplicationUser> userManager, IConfiguration configuration, SignInManager<Data.Models.ApplicationUser> signManager, RoleManager<IdentityRole> roleManager)
         {
             _context = context;
             _configuration = configuration;
             _userManager = userManager;
             _signManager = signManager;
+            _roleManager = roleManager;
         }
 
         public async Task<ResultDto> AddUserAsync(UserAddDto dto)
@@ -133,10 +135,7 @@ namespace BusinessLogic.Services.User
             };
         }
 
-
-
         // // End of DeleteUserByIdAsync method
-
         public async Task<ResultDto> GetAllUserAsync() 
         {
             var users = await _context.Users.Select(u => new
@@ -165,7 +164,6 @@ namespace BusinessLogic.Services.User
         }  
 
         // End of GetAllUserAsync method
-
         public async Task<ResultDto> GetByIdUserAsync(string id)
         {
             // Validate input
@@ -361,10 +359,62 @@ namespace BusinessLogic.Services.User
             }
         }
 
-
         // End of UpdateUserAsync method
 
+        public async Task<ResultDto> GetAnaiysisAsync()
+        {
+            // 1. Get Admin Role Id
+            var adminRole = await _roleManager.Roles
+                .FirstOrDefaultAsync(r => r.Name == "Admin");
 
+            if (adminRole == null)
+            {
+                return new ResultDto
+                {
+                    Success = false,
+                    ErrorMessage = "Admin role not found."
+                };
+            }
+
+            var adminRoleId = adminRole.Id;
+
+            // 2. Count users excluding Admins
+            var userCount = await (from user in _userManager.Users
+                                   where !_context.UserRoles
+                                        .Any(ur => ur.UserId == user.Id && ur.RoleId == adminRoleId)
+                                   select user)
+                                   .CountAsync();
+
+
+            var userTestCount = await _context.UserTests.CountAsync();
+
+            var testCount = await _context.Tests.CountAsync();
+
+            // 4. Get the count of user tests for each test in the system
+            var testCounts = await _context.UserTests
+                .Join(_context.Tests, ut => ut.TestId, t => t.Id, (ut, t) => new { ut, t })  // Join UserTests with Tests
+                .GroupBy(x => x.t.Name)  // Group by Test Name
+                .Select(group => new
+                {
+                    TestName = group.Key,  // Test Name
+                    UserTestCount = group.Count(), // Count the number of user tests for this test
+                    Ratio = (double)group.Count() / userTestCount * 100  
+                })
+                .ToListAsync();
+
+            // Return both counts
+            return new ResultDto
+            { 
+                Data = new { 
+                    UserCount = userCount, 
+                    UserTestCount = userTestCount,
+                    TestCount = testCount,
+                    TestCounts = testCounts
+                },
+                Success = true
+            };
+        }
 
     }
+
 }

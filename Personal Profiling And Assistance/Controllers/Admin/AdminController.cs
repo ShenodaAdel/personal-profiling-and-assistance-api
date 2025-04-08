@@ -106,9 +106,30 @@ namespace Personal_Profiling_And_Assistance.Controllers.Admin
             return Ok(result);
         }
 
+        [HttpGet("Analysis")]
+        public async Task<IActionResult> GetAnalysis()
+        {
+            try
+            {
+                var result = await _userService.GetAnaiysisAsync();
 
-        // Admin Controller to USer
+                if (result.Success)
+                {
+                    return Ok(result);  
+                }
 
-        // Admin Controller to Test
-    }
+                return BadRequest(result);  
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new ResultDto
+                {
+                    Success = false,
+                    ErrorMessage = $"An error occurred: {ex.Message}"
+                });
+            }
+        }
+
+
+        }
 }

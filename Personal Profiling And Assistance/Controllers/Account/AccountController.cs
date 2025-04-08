@@ -67,6 +67,35 @@ namespace Personal_Profiling_And_Assistance.Controllers.Account
             return Ok(result);
         }
 
+        [HttpPost("ForgotPassword")]
+        public async Task<IActionResult> ForgotPassword([FromBody] ForgetPasswordDto dto)
+        {
+            var result = await _authService.ForgotPasswordAsync(dto);
+
+            if (result.Success)
+            {
+                return Ok(result);
+            }
+            else
+            {
+                return BadRequest(result);
+            }
+        }
+
+        [HttpPost("ResetPassword")]
+        public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordDto dto)
+        {
+            var result = await _authService.ResetPasswordAsync(dto);
+
+            if (result.Success)
+            {
+                return Ok(result); // Success response
+            }
+            else
+            {
+                return BadRequest(result); // Error response with message
+            }
+        }
 
         //[HttpGet("CreateRoles")]
         //public async Task<IActionResult> CreateRoles()
