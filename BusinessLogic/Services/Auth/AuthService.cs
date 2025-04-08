@@ -4,26 +4,28 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Security.Claims;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using BusinessLogic.DTOs;
 using BusinessLogic.Services.Auth.Dtos;
 using BusinessLogic.Services.Emails;
 using Data.Models;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 
-namespace BusinessLogic.Services.Auth
+namespace BusinessLogic.Services.Auth 
 {
 
-    public class AuthService : IAuthService
+    public class AuthService : IAuthService 
     {
-        private readonly UserManager<ApplicationUser> _userManager;
-        private readonly RoleManager<IdentityRole> _roleManager;
-        private readonly IConfiguration _configuration;
-        private readonly ILogger<AuthService> _logger;
-        private readonly IEmailServices _emailService;
+        private readonly UserManager<ApplicationUser> _userManager; 
+        private readonly RoleManager<IdentityRole> _roleManager; 
+        private readonly IConfiguration _configuration; 
+        private readonly ILogger<AuthService> _logger; 
+        private readonly IEmailServices _emailService; 
         public AuthService(UserManager<ApplicationUser> userManager, IEmailServices emailService, IConfiguration configuration , RoleManager<IdentityRole> roleManager , ILogger<AuthService>logger)
         {
             _userManager = userManager;
@@ -36,6 +38,31 @@ namespace BusinessLogic.Services.Auth
         public async Task<ResultDto> RegisterAsync(RegisterDto dto)
         {
             var resultDto = new ResultDto();
+
+            // Validate Email
+            if (string.IsNullOrWhiteSpace(dto.Email) || !IsValidEmail(dto.Email))
+            {
+                resultDto.Success = false;
+                resultDto.ErrorMessage = "Invalid email format.";
+                return resultDto;
+            }
+
+            // Validate Username
+            if (string.IsNullOrWhiteSpace(dto.UserName) || !IsValidUserName(dto.UserName))
+            {
+                resultDto.Success = false;
+                resultDto.ErrorMessage = "Invalid username. It must be 3-20 characters long and contain only letters, numbers, or underscores.";
+                return resultDto;
+            }
+
+            // Check if username already exists
+            var existingUserByUsername = await _userManager.Users.FirstOrDefaultAsync(u => u.UserName == dto.UserName);
+            if (existingUserByUsername != null)
+            {
+                resultDto.Success = false;
+                resultDto.ErrorMessage = "Username is already taken.";
+                return resultDto;
+            }
 
             // Check if the user already exists
             var existingUser = await _userManager.FindByEmailAsync(dto.Email);
@@ -84,7 +111,8 @@ namespace BusinessLogic.Services.Auth
             resultDto.Data = new AuthResponseDto
             { 
                 Token = token,
-                Role = "User"
+                Role = "User",
+                UserId = newUser.Id
             }; 
             // Ensure you wrap the token in an object if needed
             return resultDto;
@@ -357,6 +385,35 @@ namespace BusinessLogic.Services.Auth
             );
 
             return new JwtSecurityTokenHandler().WriteToken(token);
+        }
+
+        private bool IsValidEmail(string email)
+        {
+            if (string.IsNullOrWhiteSpace(email))
+                return false;
+
+            try
+            {
+                // Use simple regex for email validation
+                var emailRegex = new Regex(@"^[^@\s]+@[^@\s]+\.[^@\s]+$", RegexOptions.IgnoreCase);
+                return emailRegex.IsMatch(email);
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        private bool IsValidUserName(string userName)
+        {
+            if (string.IsNullOrWhiteSpace(userName))
+                return false;
+
+            if (userName.Length < 3 || userName.Length > 20)
+                return false;
+
+            // Only allow letters, numbers, underscores
+            return System.Text.RegularExpressions.Regex.IsMatch(userName, @"^[a-zA-Z0-9_]+$");
         }
     }
 }
