@@ -17,7 +17,7 @@ namespace Personal_Profiling_And_Assistance.Controllers.Admin.UserTest
             _userTestService = userTestService;
         }
 
-        [HttpPost("AddTestToUser")]
+        [HttpPost("AddTestToUser/{userId}/{testId}")]
         public async Task<ActionResult<ResultDto>> AddUserTestAsync(string userId , int testId , UserTestDto dto)   
         {
             try

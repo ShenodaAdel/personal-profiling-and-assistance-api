@@ -268,7 +268,14 @@ namespace BusinessLogic.Services.UserTest
                     UserId = group.Key.UserId,
                     UserName = group.Key.UserName,
                     UserEmail = group.Key.Email,
-                    TestCount = group.Count() // Count number of tests taken
+                    TestCount = group.Count(), // Count number of tests taken
+                    UserTests = group.Select(ut => new
+                    {
+                        UserTestId = ut.Id, // UserTest Id
+                        TestName = ut.Test.Name, // Test Name
+                        DateTaken = ut.Date, // Date when the test was taken
+                        Result = ut.Result // Result of the test
+                    }).ToList() // List of tests for 
                 })
                 .ToListAsync();
 

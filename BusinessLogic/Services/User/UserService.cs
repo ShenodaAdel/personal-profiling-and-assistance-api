@@ -5,7 +5,8 @@ using Microsoft.EntityFrameworkCore;
 using BusinessLogic.Services.User.Dtos;
 using Microsoft.Extensions.Configuration;
 using Microsoft.AspNetCore.Identity;
-using BusinessLogic.Services.User.DTOs;
+using Newtonsoft.Json;
+
 
 namespace BusinessLogic.Services.User
 {
@@ -181,7 +182,28 @@ namespace BusinessLogic.Services.User
                 // Get user from database
                 var user = await _context.Users
                     .AsNoTracking()
-                    .FirstOrDefaultAsync(u => u.Id == id);
+                    .Where(u => u.Id == id)
+                    .Select(u => new
+                    {
+                        Id = u.Id,
+                        Name = u.UserName,
+                        Email = u.Email,
+                        Phone = u.PhoneNumber,
+                        Gender = u.Gender,
+                        ProfilePicture = u.ProfilePicture,
+                        Tests = _context.UserTests
+                            .Where(ut => ut.UserId == u.Id)
+                            .OrderBy(ut => ut.Date)
+                            .Select(ut => new
+                            {
+                                TestId = ut.TestId,                        
+                                TestName = ut.Test!.Name, // Assuming "Name" exists in the Test entity
+                                DateTaken = ut.Date,
+                                Result = ExtractValueFromJsonString(ut.Result)
+                            })
+                            .ToList()
+                    })
+                    .FirstOrDefaultAsync();
 
                 // Handle not found
                 if (user == null)
@@ -192,21 +214,9 @@ namespace BusinessLogic.Services.User
                         ErrorMessage = $"User with ID {id} not found."
                     };
                 }
-
-                // Map to safe DTO (exclude password)
-                var userResponse = new 
-                {
-                    Id = user.Id,
-                    Name = user.UserName,
-                    Email = user.Email,
-                    Phone = user.PhoneNumber,
-                    Gender = user.Gender,
-                    ProfilePicture = user.ProfilePicture
-                };
-
                 return new ResultDto
                 {
-                    Data = userResponse,
+                    Data = user,
                     Success = true,
                 };
             }
@@ -327,7 +337,7 @@ namespace BusinessLogic.Services.User
                                 TestId = ut.TestId,
                                 TestName = ut.Test!.Name, // Assuming "Name" exists in the Test entity
                                 DateTaken = ut.Date,
-                                Result = ut.Result
+                                Result = ExtractValueFromJsonString(ut.Result)
                             })
                             .ToList()
                     })
@@ -413,6 +423,14 @@ namespace BusinessLogic.Services.User
                 },
                 Success = true
             };
+        }
+
+
+        public static string ExtractValueFromJsonString(string input)
+        {
+            var jsonString = $"{{\"Key\":\"{input.Replace("Key:", "").Trim()}\"}}";
+            var parsedJson = JsonConvert.DeserializeObject<Dictionary<string, string>>(jsonString);
+            return parsedJson?.GetValueOrDefault("Key");
         }
 
     }
