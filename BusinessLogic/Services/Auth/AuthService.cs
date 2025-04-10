@@ -361,20 +361,27 @@ namespace BusinessLogic.Services.Auth
             if (string.IsNullOrEmpty(user.Email))
                 throw new Exception("User Email is missing!");
 
-            // 3. Generate token
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
-            var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+            // 3. Get user roles
+            var roles = await _userManager.GetRolesAsync(user) ?? new List<string>();
 
-            var roles = await _userManager.GetRolesAsync(user) ?? new List<string>(); // Handle null roles
-
+            // 4. Create claims (UserId, Email, Roles)
             var claims = new List<Claim>
     {
-        new Claim(ClaimTypes.NameIdentifier, user.Id),
-        new Claim(ClaimTypes.Email, user.Email),
-        new Claim(ClaimTypes.Name, user.UserName ?? "") // Handle null UserName
+        new Claim(JwtRegisteredClaimNames.Sub, user.Id), // Standard "sub" claim for UserId
+        new Claim(JwtRegisteredClaimNames.Email, user.Email), // Standard "email" claim
+        new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()), // Unique token ID
+        new Claim("userId", user.Id), // Custom claim (optional)
     };
 
-            claims.AddRange(roles.Select(role => new Claim(ClaimTypes.Role, role)));
+            // Add roles as multiple claims (compatible with .NET Role-based Authorization)
+            foreach (var role in roles)
+            {
+                claims.Add(new Claim(ClaimTypes.Role, role));
+            }
+
+            // 5. Generate token
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
+            var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
             var token = new JwtSecurityToken(
                 issuer: issuer,
