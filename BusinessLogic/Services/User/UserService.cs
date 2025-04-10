@@ -412,6 +412,29 @@ namespace BusinessLogic.Services.User
                 })
                 .ToListAsync();
 
+            // 4. Retrieve all UserTests and perform the result extraction after fetching the data
+            var userTests = await _context.UserTests
+                .Include(ut => ut.Test) // Ensure that Test info is included
+                .ToListAsync();
+
+            // 5. For each test, count the occurrences of each result type ("طبيعي", "خفيف", "متوسط", "شديد")
+            var resultCountsByTest = userTests
+                .GroupBy(ut => ut.Test.Name)  // Group by Test Name
+                .Select(group => new
+                {
+                    TestName = group.Key, // Test Name
+                    TotalCount = group.Count(), // Total number of tests for this test
+                    NaturalCount = group.Count(ut => ExtractValueFromJsonString(ut.Result) == "طبيعي"), // Count "طبيعي"
+                    LightCount = group.Count(ut => ExtractValueFromJsonString(ut.Result) == "خفيف"), // Count "خفيف"
+                    ModerateCount = group.Count(ut => ExtractValueFromJsonString(ut.Result) == "متوسط"), // Count "متوسط"
+                    SevereCount = group.Count(ut => ExtractValueFromJsonString(ut.Result) == "شديد"), // Count "شديد"
+                    NaturalRatio = (double)group.Count(ut => ExtractValueFromJsonString(ut.Result) == "طبيعي") / group.Count() * 100, // Calculate ratio for "طبيعي"
+                    LightRatio = (double)group.Count(ut => ExtractValueFromJsonString(ut.Result) == "خفيف") / group.Count() * 100, // Calculate ratio for "خفيف"
+                    ModerateRatio = (double)group.Count(ut => ExtractValueFromJsonString(ut.Result) == "متوسط") / group.Count() * 100, // Calculate ratio for "متوسط"
+                    SevereRatio = (double)group.Count(ut => ExtractValueFromJsonString(ut.Result) == "شديد") / group.Count() * 100 // Calculate ratio for "شديد"
+                })
+                .ToList();
+
             // Return both counts
             return new ResultDto
             { 
@@ -419,12 +442,12 @@ namespace BusinessLogic.Services.User
                     UserCount = userCount, 
                     UserTestCount = userTestCount,
                     TestCount = testCount,
-                    TestCounts = testCounts
+                    TestCounts = testCounts,
+                    ResultCounts = resultCountsByTest
                 },
                 Success = true
             };
         }
-
 
         public static string ExtractValueFromJsonString(string input)
         {
