@@ -1,17 +1,22 @@
-﻿using Microsoft.Extensions.Options;
+﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using System.Net.Mail;
 using System.Net;
 using BusinessLogic.Services.Emails.Dtos;
+using BusinessLogic.Services.Auth;
+
 
 namespace BusinessLogic.Services.Emails
 {
     public class EmailService : IEmailServices
     {
         private readonly EmailSettingsDto _emailSettings;
+        private readonly ILogger<AuthService> _logger;
 
-        public EmailService(IOptions<EmailSettingsDto> emailSettings)
+        public EmailService(IOptions<EmailSettingsDto> emailSettings, ILogger<AuthService> logger)
         {
             _emailSettings = emailSettings.Value;
+            _logger = logger;
         }
 
         public async Task SendResetPasswordEmailAsync(string toEmail, string resetLink)
@@ -24,7 +29,7 @@ namespace BusinessLogic.Services.Emails
                 throw new InvalidOperationException("Email settings are not configured properly.");
             }
 
-            using (var client = new SmtpClient(_emailSettings.SmtpServer, _emailSettings.SmtpPort.Value)) 
+            using (var client = new SmtpClient(_emailSettings.SmtpServer, _emailSettings.SmtpPort.Value))
             {
                 client.EnableSsl = true;
                 client.Credentials = new NetworkCredential(_emailSettings.SmtpUser, _emailSettings.SmtpPass);
@@ -38,8 +43,26 @@ namespace BusinessLogic.Services.Emails
                 };
                 mail.To.Add(toEmail);
 
-                await client.SendMailAsync(mail);
+                try
+                {
+                    _logger.LogInformation($"Attempting to send reset password email to {toEmail}.");
+                    await client.SendMailAsync(mail);
+                    _logger.LogInformation("Password reset email sent successfully.");
+                }
+                catch (SmtpException smtpEx)
+                {
+                    // Log detailed SMTP exception
+                    _logger.LogError(smtpEx, "SMTP error occurred while sending password reset email.");
+                    throw new InvalidOperationException("Failed to send password reset email due to SMTP error.", smtpEx);
+                }
+                catch (Exception ex)
+                {
+                    // Log general exceptions
+                    _logger.LogError(ex, "General error occurred while sending password reset email.");
+                    throw new InvalidOperationException("Failed to send password reset email due to a general error.", ex);
+                }
             }
         }
+
     }
 }

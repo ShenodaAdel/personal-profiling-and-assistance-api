@@ -21,18 +21,18 @@ namespace BusinessLogic.Services.Auth
 
     public class AuthService : IAuthService 
     {
-        private readonly UserManager<ApplicationUser> _userManager; 
-        private readonly RoleManager<IdentityRole> _roleManager; 
-        private readonly IConfiguration _configuration; 
-        private readonly ILogger<AuthService> _logger; 
-        private readonly IEmailServices _emailService; 
+        private readonly UserManager<ApplicationUser> _userManager;   
+        private readonly RoleManager<IdentityRole> _roleManager;   
+        private readonly IConfiguration _configuration;   
+        private readonly ILogger<AuthService> _logger;   
+        private readonly IEmailServices _emailService;   
         public AuthService(UserManager<ApplicationUser> userManager, IEmailServices emailService, IConfiguration configuration , RoleManager<IdentityRole> roleManager , ILogger<AuthService>logger)
         {
             _userManager = userManager;
             _configuration = configuration;
             _roleManager = roleManager;
             _logger = logger;
-            _emailService = emailService;
+            _emailService = emailService; 
         }
 
         public async Task<ResultDto> RegisterAsync(RegisterDto dto)
@@ -239,11 +239,7 @@ namespace BusinessLogic.Services.Auth
             }
 
             var token = await _userManager.GeneratePasswordResetTokenAsync(user);
-
-            // Encode token because it can have unsafe characters for URLs
             var encodedToken = System.Web.HttpUtility.UrlEncode(token);
-
-            // Build a reset URL (this should be front-end URL)
             var resetUrl = $"https://yourfrontend.com/reset-password?email={dto.Email}&token={encodedToken}";
 
             try
@@ -256,13 +252,14 @@ namespace BusinessLogic.Services.Auth
             catch (Exception ex)
             {
                 // Log the error and return failure result
-                _logger.LogError(ex, "Error sending reset password email");
+                _logger.LogError(ex, "Error sending reset password email.");
                 resultDto.Success = false;
-                resultDto.ErrorMessage = "There was an error sending the password reset email.";
+                resultDto.ErrorMessage = "There was an error sending the password reset email. Please try again later.";
             }
 
             return resultDto;
         }
+
         public async Task<ResultDto> ResetPasswordAsync(ResetPasswordDto dto)
         {
             var resultDto = new ResultDto();
