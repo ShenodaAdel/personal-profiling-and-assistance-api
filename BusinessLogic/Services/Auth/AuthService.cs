@@ -111,8 +111,7 @@ namespace BusinessLogic.Services.Auth
             resultDto.Data = new AuthResponseDto
             { 
                 Token = token,
-                Role = "User",
-                UserId = newUser.Id
+                Role = "User"
             }; 
             // Ensure you wrap the token in an object if needed
             return resultDto;
@@ -141,8 +140,7 @@ namespace BusinessLogic.Services.Auth
                     Success = true,
                     Data = new { 
                         Token = token,
-                        Roles = roles,
-                        UserId = user.Id
+                        Roles = roles
                     }
                 };
             }
@@ -210,8 +208,7 @@ namespace BusinessLogic.Services.Auth
                     Data = new
                     {
                         Token = token,
-                        Roles = roles,
-                        UserId = user.Id
+                        Roles = roles
                     }
                 };
             }

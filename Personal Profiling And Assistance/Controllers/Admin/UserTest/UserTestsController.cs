@@ -1,6 +1,7 @@
 ﻿using BusinessLogic.DTOs;
 using BusinessLogic.Services.UserTest;
 using BusinessLogic.Services.UserTest.Dtos;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -17,8 +18,9 @@ namespace Personal_Profiling_And_Assistance.Controllers.Admin.UserTest
             _userTestService = userTestService;
         }
 
-        [HttpPost("AddTestToUser/{userId}/{testId}")]
-        public async Task<ActionResult<ResultDto>> AddUserTestAsync(string userId , int testId , UserTestDto dto)   
+        [HttpPost("AddTestToUser/{testId}")]
+        [Authorize]
+        public async Task<ActionResult<ResultDto>> AddUserTestAsync([FromHeader] string Authorization , int testId , UserTestDto dto)   
         {
             try
             {
@@ -27,7 +29,13 @@ namespace Personal_Profiling_And_Assistance.Controllers.Admin.UserTest
                     return BadRequest(new ResultDto { Success = false, ErrorMessage = "Invalid request data." });
                 }
 
-                var result = await _userTestService.AddUserTestAsync(userId, testId, dto);
+                // Validate token and extract userId
+                if (string.IsNullOrEmpty(Authorization) || !Authorization.StartsWith("Bearer "))
+                {
+                    return Unauthorized(new ResultDto { Success = false, ErrorMessage = "Unauthorized: Missing or invalid token." });
+                }
+                var Token = Authorization.Substring("Bearer ".Length).Trim();
+                var result = await _userTestService.AddUserTestAsync(Token, testId, dto);
 
                 if (!result.Success)
                 {

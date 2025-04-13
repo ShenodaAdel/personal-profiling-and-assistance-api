@@ -12,12 +12,12 @@ namespace BusinessLogic.Services.User
 {
     public interface IUserService
     {
-        Task<ResultDto> AddUserAsync(UserAddDto dto);
-        Task<ResultDto> DeleteUserByIdAsync(string id);
+        Task<ResultDto> AddUserAsync(UserAddDto dto); 
+        Task<ResultDto> DeleteUserByIdAsync(string Token);
         Task<ResultDto> GetAllUserAsync();
-        Task<ResultDto> GetByIdUserAsync(string id);
+        Task<ResultDto> GetByIdUserAsync(string Token); 
         Task<ResultDto> GetByIdUserDetailsAsync(string id);
-        Task<ResultDto> UpdateUserAsync(string id, string? userName, string? phoneNumber, string? gender, byte[]? profilePicture);
+        Task<ResultDto> UpdateUserAsync(string Token, string? userName, string? phoneNumber, string? gender, byte[]? profilePicture);
 
         Task<ResultDto> GetAnaiysisAsync();
 

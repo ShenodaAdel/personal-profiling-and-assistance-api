@@ -76,10 +76,21 @@ namespace Personal_Profiling_And_Assistance.Controllers.Admin
             return Ok(result); // 200 OK if user is found
         }
 
-        [HttpDelete("DeleteUser/{id}")]
-        public async Task<IActionResult> DeleteUser(string id)
+        [HttpDelete("DeleteUser")]
+        [Authorize]
+        public async Task<IActionResult> DeleteUser([FromHeader] string Authorization)
         {
-            var result = await _userService.DeleteUserByIdAsync(id);
+
+            if (string.IsNullOrEmpty(Authorization) || !Authorization.StartsWith("Bearer "))
+            {
+                return Unauthorized(new ResultDto
+                {
+                    Success = false,
+                    ErrorMessage = "Unauthorized: Missing or invalid token."
+                });
+            }
+            var Token = Authorization.Substring("Bearer ".Length).Trim();
+            var result = await _userService.DeleteUserByIdAsync(Token);
 
             if (!result.Success)
             {
@@ -89,14 +100,17 @@ namespace Personal_Profiling_And_Assistance.Controllers.Admin
             return Ok(result); // Returns 200 if deletion is successful
         }
 
-        [HttpPut("UpdateAdmin/{id}")]
-        public async Task<IActionResult> UpdateAdmin(string id, [FromForm] UpdateUserDto dto) // ✅ Use [FromForm]
+        [HttpPut("UpdateAdmin")]
+        [Authorize]
+        public async Task<IActionResult> UpdateAdmin([FromHeader] string Authorization, [FromForm] UpdateUserDto dto) // ✅ Use [FromForm]
         {
-            if (string.IsNullOrWhiteSpace(id) || dto == null)
+            // Validate the Authorization header
+            if (string.IsNullOrEmpty(Authorization) || !Authorization.StartsWith("Bearer "))
             {
-                return BadRequest(new { Success = false, ErrorMessage = "Invalid request data." });
+                return Unauthorized(new { Success = false, ErrorMessage = "Unauthorized: Missing or invalid token." });
             }
-
+            // Extract the token from the Authorization header (remove "Bearer " prefix)
+            var Token = Authorization.Substring("Bearer ".Length).Trim();
             byte[]? profilePictureBytes = null;
             if (dto.ProfilePicture != null)
             {
@@ -107,7 +121,7 @@ namespace Personal_Profiling_And_Assistance.Controllers.Admin
                 }
             }
 
-            var result = await _userService.UpdateUserAsync(id, dto.UserName,dto.PhoneNumber, dto.Gender, profilePictureBytes); // ✅ Send byte[] instead of IFormFile
+            var result = await _userService.UpdateUserAsync(Token, dto.UserName,dto.PhoneNumber, dto.Gender, profilePictureBytes); // ✅ Send byte[] instead of IFormFile
 
             if (!result.Success)
             {

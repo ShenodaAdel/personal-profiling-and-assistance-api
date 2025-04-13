@@ -1,7 +1,9 @@
 ﻿using BusinessLogic.DTOs;
+using BusinessLogic.Services.TokenService;
 using BusinessLogic.Services.UserTest.Dtos;
 using Data;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Identity.Client;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,13 +15,15 @@ namespace BusinessLogic.Services.UserTest
     public class UserTestService : IUserTestService
     {
         private readonly MyDbContext _context;
+        private readonly ITokenService _tokenService;
 
-        public UserTestService(MyDbContext context)
+        public UserTestService(MyDbContext context,ITokenService tokenService)
         {
             _context = context;
+            _tokenService = tokenService;
         }
 
-        public async Task<ResultDto> AddUserTestAsync(string userId , int testId , UserTestDto dto)
+        public async Task<ResultDto> AddUserTestAsync(string Token , int testId , UserTestDto dto)
         {
             // Validate required fields
             if (string.IsNullOrWhiteSpace(dto.Result))
@@ -30,6 +34,8 @@ namespace BusinessLogic.Services.UserTest
                     ErrorMessage = "Result cannot be empty."
                 };
             }
+
+            var userId = _tokenService.GetUserIdFromToken(Token);
 
             // Validate UserId
             if (userId == null)

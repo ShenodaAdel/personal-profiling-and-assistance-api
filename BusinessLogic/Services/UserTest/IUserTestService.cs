@@ -10,7 +10,7 @@ namespace BusinessLogic.Services.UserTest
 {
     public interface IUserTestService
     {
-        Task<ResultDto> AddUserTestAsync(string userId , int testId , UserTestDto dto);
+        Task<ResultDto> AddUserTestAsync(string Token , int testId , UserTestDto dto);
 
         Task<ResultDto> UpdateUserTestAsync(int id, UpdateUserTestDto dto);
         Task<ResultDto> DeleteUserTestAsync(int id);

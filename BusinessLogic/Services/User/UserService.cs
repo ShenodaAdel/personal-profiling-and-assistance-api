@@ -9,6 +9,7 @@ using Newtonsoft.Json;
 using BusinessLogic.Services.Auth;
 using System.IdentityModel.Tokens.Jwt;
 using BusinessLogic.Services.TokenService;
+using Newtonsoft.Json.Linq;
 
 
 namespace BusinessLogic.Services.User
@@ -100,9 +101,11 @@ namespace BusinessLogic.Services.User
 
         // End of AddUserAsync method
 
-        public async Task<ResultDto> DeleteUserByIdAsync(string id)
+        public async Task<ResultDto> DeleteUserByIdAsync(string Token)
         {
-            var user = await _userManager.FindByIdAsync(id);
+
+            var userId = _tokenService.GetUserIdFromToken(Token);
+            var user = await _userManager.FindByIdAsync(userId);
 
             if (user == null)
             {
@@ -114,7 +117,7 @@ namespace BusinessLogic.Services.User
             }
 
             // Delete related UserTests first
-            var userTests = _context.UserTests.Where(ut => ut.UserId == id).ToList();
+            var userTests = _context.UserTests.Where(ut => ut.UserId == userId).ToList();
             if (userTests.Any())
             {
                 _context.UserTests.RemoveRange(userTests);
@@ -240,9 +243,10 @@ namespace BusinessLogic.Services.User
 
         // End of GetByIdUserAsync method
 
-        public async Task<ResultDto> UpdateUserAsync(string id, string? userName, string? phoneNumber, string? gender, byte[]? profilePicture)
+        public async Task<ResultDto> UpdateUserAsync(string Token, string? userName, string? phoneNumber, string? gender, byte[]? profilePicture)
         {
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == id);
+            var userId = _tokenService.GetUserIdFromToken(Token);
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId);
             if (user == null)
             {
                 return new ResultDto
@@ -254,7 +258,7 @@ namespace BusinessLogic.Services.User
 
             try
             {
-                bool phoneExists = await _context.Users.AnyAsync(u => u.PhoneNumber == phoneNumber && u.Id != id);
+                bool phoneExists = await _context.Users.AnyAsync(u => u.PhoneNumber == phoneNumber && u.Id != userId);
                 
 
                 if (phoneExists)
