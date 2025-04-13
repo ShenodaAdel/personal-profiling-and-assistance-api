@@ -6,6 +6,9 @@ using BusinessLogic.Services.User.Dtos;
 using Microsoft.Extensions.Configuration;
 using Microsoft.AspNetCore.Identity;
 using Newtonsoft.Json;
+using BusinessLogic.Services.Auth;
+using System.IdentityModel.Tokens.Jwt;
+using BusinessLogic.Services.TokenService;
 
 
 namespace BusinessLogic.Services.User
@@ -17,14 +20,15 @@ namespace BusinessLogic.Services.User
         private readonly UserManager<Data.Models.ApplicationUser> _userManager;
         private readonly SignInManager<Data.Models.ApplicationUser> _signManager;
         private readonly RoleManager<IdentityRole> _roleManager;
-
-        public UserService(MyDbContext context, UserManager<Data.Models.ApplicationUser> userManager, IConfiguration configuration, SignInManager<Data.Models.ApplicationUser> signManager, RoleManager<IdentityRole> roleManager)
+        private readonly ITokenService _tokenService;
+        public UserService(MyDbContext context, UserManager<Data.Models.ApplicationUser> userManager, IConfiguration configuration, SignInManager<Data.Models.ApplicationUser> signManager, RoleManager<IdentityRole> roleManager, ITokenService tokenService)
         {
             _context = context;
             _configuration = configuration;
             _userManager = userManager;
             _signManager = signManager;
             _roleManager = roleManager;
+            _tokenService = tokenService;
         }
 
         public async Task<ResultDto> AddUserAsync(UserAddDto dto)
@@ -125,7 +129,8 @@ namespace BusinessLogic.Services.User
                 return new ResultDto
                 {
                     Success = true,
-                    Data = new { user.Id, user.UserName, user.Email }
+                    Data = new { user.Id, user.UserName, user.Email },
+                    ErrorMessage = "User deleted successfully"
                 };
             }
 
@@ -165,24 +170,25 @@ namespace BusinessLogic.Services.User
         }  
 
         // End of GetAllUserAsync method
-        public async Task<ResultDto> GetByIdUserAsync(string id)
+        public async Task<ResultDto> GetByIdUserAsync(string token)
         {
             // Validate input
-            if (id == null)
+            if (string.IsNullOrWhiteSpace(token))
             {
                 return new ResultDto
                 {
                     Success = false,
-                    ErrorMessage = "Invalid user ID. ID must be a positive number.",
+                    ErrorMessage = "Invalid token.",
                 };
             }
 
             try
             {
                 // Get user from database
+                var userId = _tokenService.GetUserIdFromToken(token);
                 var user = await _context.Users
                     .AsNoTracking()
-                    .Where(u => u.Id == id)
+                    .Where(u => u.Id == userId)
                     .Select(u => new
                     {
                         Id = u.Id,
@@ -211,7 +217,7 @@ namespace BusinessLogic.Services.User
                     return new ResultDto
                     {
                         Success = false,
-                        ErrorMessage = $"User with ID {id} not found."
+                        ErrorMessage = $"User not found."
                     };
                 }
                 return new ResultDto
@@ -455,6 +461,9 @@ namespace BusinessLogic.Services.User
             var parsedJson = JsonConvert.DeserializeObject<Dictionary<string, string>>(jsonString);
             return parsedJson?.GetValueOrDefault("Key");
         }
+
+
+        
 
     }
 

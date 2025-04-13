@@ -21,7 +21,7 @@ namespace Personal_Profiling_And_Assistance.Controllers.Admin
     {
 
         private readonly IUserService _userService;
-        // Admin Controller to USer 
+
 
         public AdminController(IUserService userService)
         {
@@ -52,10 +52,21 @@ namespace Personal_Profiling_And_Assistance.Controllers.Admin
             return Ok(result.Data);
         }
 
-        [HttpGet("GetUserById/{id}")]
-        public async Task<IActionResult> GetUserById(string id)
+        [HttpGet("GetUserById")]
+        [Authorize]
+        public async Task<IActionResult> GetUserById([FromHeader] string Authorization)
         {
-            var result = await _userService.GetByIdUserAsync(id);
+            // Validate the Authorization header
+            if (string.IsNullOrEmpty(Authorization) || !Authorization.StartsWith("Bearer "))
+            {
+                return Unauthorized(new ResultDto
+                {
+                    Success = false,
+                    ErrorMessage = "Unauthorized: Missing or invalid token."
+                });
+            }
+            var Token = Authorization.Substring("Bearer ".Length).Trim();
+            var result = await _userService.GetByIdUserAsync(Token);
 
             if (!result.Success)
             {
