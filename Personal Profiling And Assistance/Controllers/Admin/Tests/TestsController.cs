@@ -18,7 +18,7 @@ namespace Personal_Profiling_And_Assistance.Controllers.Admin.TestController
         }
 
         [HttpPost("AddTest")]
-        public async Task<IActionResult> AddTest([FromBody] TestAddDto dto)
+        public async Task<IActionResult> AddTest([FromForm] TestAddDto dto)
         {
             if (!ModelState.IsValid)
             {
@@ -77,7 +77,7 @@ namespace Personal_Profiling_And_Assistance.Controllers.Admin.TestController
         }
 
         [HttpPut("UpdateTest/{id}")]
-        public async Task<IActionResult> UpdateTest(int id, [FromBody] TestAddDto dto)
+        public async Task<IActionResult> UpdateTest(int id, [FromForm] TestAddDto dto)
         {
             if (!ModelState.IsValid)
             {

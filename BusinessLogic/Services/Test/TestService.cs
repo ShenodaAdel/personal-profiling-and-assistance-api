@@ -32,6 +32,47 @@ namespace BusinessLogic.Services.Test
                 };
             }
 
+            // Validate if Description is not empty
+            if (string.IsNullOrWhiteSpace(dto.Description))
+            {
+                return new ResultDto
+                {
+                    Success = false,
+                    ErrorMessage = "Test Description cannot be empty."
+                };
+            }
+
+            // Validate if TestImage is provided
+            if (dto.TestImage == null)
+            {
+                return new ResultDto
+                {
+                    Success = false,
+                    ErrorMessage = "Test Image is required."
+                };
+            }
+            // Validate the file size (e.g., maximum 5 MB)
+            if (dto.TestImage.Length > 5 * 1024 * 1024) // 5MB size limit
+            {
+                return new ResultDto
+                {
+                    Success = false,
+                    ErrorMessage = "Test Image is too large. Maximum size is 5 MB."
+                };
+            }
+
+            // Validate if the uploaded file is an image (basic check by file extension)
+            var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif" };
+            var fileExtension = Path.GetExtension(dto.TestImage.FileName).ToLower();
+            if (!allowedExtensions.Contains(fileExtension))
+            {
+                return new ResultDto
+                {
+                    Success = false,
+                    ErrorMessage = "Invalid file type. Allowed types are .jpg, .jpeg, .png, .gif."
+                };
+            }
+
             // Validate if Name already exists in the database
             bool nameExists = await _context.Tests.AnyAsync(t => t.Name == dto.Name);
             if (nameExists)
@@ -43,10 +84,21 @@ namespace BusinessLogic.Services.Test
                 };
             }
 
+
+            // Convert the image to a byte array
+            byte[] imageBytes;
+            using (var memoryStream = new MemoryStream())
+            {
+                await dto.TestImage.CopyToAsync(memoryStream);
+                imageBytes = memoryStream.ToArray();
+            }
+
             // If validations pass, add the new test
             var test = new Data.Models.Test
             {
-                Name = dto.Name
+                Name = dto.Name!,
+                Description = dto.Description!,
+                TestImage = imageBytes
             };
 
             await _context.Tests.AddAsync(test);
@@ -61,7 +113,8 @@ namespace BusinessLogic.Services.Test
                         test.Id,
                         test.Name
                     },
-                    Success = true
+                    Success = true,
+                    ErrorMessage = "Test is already Added."
                 };
             }
 
@@ -131,7 +184,6 @@ namespace BusinessLogic.Services.Test
 
         public async Task<ResultDto> UpdateTestAsync(int id, TestAddDto dto)
         {
-            // Find the test by Id
             var test = await _context.Tests.FindAsync(id);
 
             // If the test doesn't exist, return an error
@@ -169,6 +221,44 @@ namespace BusinessLogic.Services.Test
 
                 // Update test properties from the DTO
                 test.Name = dto.Name;
+                test.Description = dto.Description;
+
+                // If a new TestImage is provided, process the image
+                if (dto.TestImage != null)
+                {
+                    // Validate the image (size, type, etc.)
+                    if (dto.TestImage.Length > 5 * 1024 * 1024) // 5 MB size limit
+                    {
+                        return new ResultDto
+                        {
+                            Success = false,
+                            ErrorMessage = "Test Image is too large. Maximum size is 5 MB."
+                        };
+                    }
+
+                    var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif" };
+                    var fileExtension = Path.GetExtension(dto.TestImage.FileName).ToLower();
+                    if (!allowedExtensions.Contains(fileExtension))
+                    {
+                        return new ResultDto
+                        {
+                            Success = false,
+                            ErrorMessage = "Invalid file type. Allowed types are .jpg, .jpeg, .png, .gif."
+                        };
+                    }
+
+                    // Convert the image to a byte array
+                    byte[] imageBytes;
+                    using (var memoryStream = new MemoryStream())
+                    {
+                        await dto.TestImage.CopyToAsync(memoryStream);
+                        imageBytes = memoryStream.ToArray();
+                    }
+
+                    // Update the TestImage field with the new image
+                    test.TestImage = imageBytes;
+                }
+
                 _context.Tests.Update(test);
                 int saveResult = await _context.SaveChangesAsync();
 
@@ -211,7 +301,9 @@ namespace BusinessLogic.Services.Test
              .Select(t => new
              {
                 t.Id,
-                t.Name
+                t.Name,
+                t.Description,
+                t.TestImage
              })
              .FirstOrDefaultAsync();
 
