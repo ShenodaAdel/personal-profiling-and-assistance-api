@@ -230,28 +230,36 @@ namespace BusinessLogic.Services.Auth
         {
             var resultDto = new ResultDto();
 
+            // Attempt to find the user by email
             var user = await _userManager.FindByEmailAsync(dto.Email);
             if (user == null)
             {
-                // Don't reveal that the user does not exist
-                resultDto.Success = true;
+                // If the user does not exist, don't reveal that the user doesn't exist
+                resultDto.Success = true;  // Success is true to avoid revealing existence
                 return resultDto;
             }
 
+            // Generate a password reset token for the user
             var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+
+            // Encode the token for safe use in the URL
             var encodedToken = System.Web.HttpUtility.UrlEncode(token);
+
+            // Create the reset URL
             var resetUrl = $"https://yourfrontend.com/reset-password?email={dto.Email}&token={encodedToken}";
 
             try
             {
-                // Send the reset email
+                // Send the reset password email with the generated URL
                 await _emailService.SendResetPasswordEmailAsync(dto.Email, resetUrl);
+
+                // Successfully sent the email, set success and return reset URL
                 resultDto.Success = true;
-                resultDto.Data = resetUrl;
+                resultDto.Data = resetUrl;  // Returning the reset URL as data
             }
             catch (Exception ex)
             {
-                // Log the error and return failure result
+                // Log the error and return failure result with error message
                 _logger.LogError(ex, "Error sending reset password email.");
                 resultDto.Success = false;
                 resultDto.ErrorMessage = "There was an error sending the password reset email. Please try again later.";
@@ -259,6 +267,7 @@ namespace BusinessLogic.Services.Auth
 
             return resultDto;
         }
+
 
         public async Task<ResultDto> ResetPasswordAsync(ResetPasswordDto dto)
         {
