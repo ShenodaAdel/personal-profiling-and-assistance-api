@@ -37,7 +37,7 @@ namespace BusinessLogic.Services.Emails
 
             using var smtp = new SmtpClient();
             smtp.Connect(_emailSettings.Host, _emailSettings.Port, SecureSocketOptions.StartTls);
-            smtp.Authenticate(_emailSettings.Email, _emailSettings.Password); // Authentication
+            smtp.Authenticate(_emailSettings.Email, "@shenoda11"); // Authentication
             await smtp.SendAsync(email);
 
             smtp.Disconnect(true);

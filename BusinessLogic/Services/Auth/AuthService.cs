@@ -228,7 +228,7 @@ namespace BusinessLogic.Services.Auth
 
         public async Task<ResultDto> ForgotPasswordAsync(ForgetPasswordDto dto) 
         {
-             var resultDto = new ResultDto();
+             var resultDto = new ResultDto(); 
 
             // Attempt to find the user by email
             var user = await _userManager.FindByEmailAsync(dto.Email);
@@ -265,7 +265,6 @@ namespace BusinessLogic.Services.Auth
 
             return resultDto;
         }
-
 
         public async Task<ResultDto> ResetPasswordAsync(ResetPasswordDto dto)
         {
