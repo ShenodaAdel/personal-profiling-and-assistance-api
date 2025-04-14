@@ -226,9 +226,9 @@ namespace BusinessLogic.Services.Auth
             }
         }
 
-        public async Task<ResultDto> ForgotPasswordAsync(ForgetPasswordDto dto)
+        public async Task<ResultDto> ForgotPasswordAsync(ForgetPasswordDto dto) 
         {
-            var resultDto = new ResultDto();
+             var resultDto = new ResultDto();
 
             // Attempt to find the user by email
             var user = await _userManager.FindByEmailAsync(dto.Email);
@@ -244,9 +244,7 @@ namespace BusinessLogic.Services.Auth
 
             // Encode the token for safe use in the URL
             var encodedToken = System.Web.HttpUtility.UrlEncode(token);
-
-            // Create the reset URL
-            var resetUrl = $"https://yourfrontend.com/reset-password?email={dto.Email}&token={encodedToken}";
+            var resetUrl = $"https://yourtestdomain.com/test-reset-password?email={dto.Email}&token={encodedToken}";
 
             try
             {

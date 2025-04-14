@@ -44,6 +44,8 @@ builder.Services.AddCors(options =>
               .AllowCredentials(); // Optional, depending on your setup
     });
 });
+
+// Section for EmailSettingsDto
 builder.Services.Configure<EmailSettingsDto>(builder.Configuration.GetSection("EmailSettings"));
 builder.Services.AddScoped<IEmailServices, EmailService>();
 

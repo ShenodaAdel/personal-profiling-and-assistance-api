@@ -111,7 +111,9 @@ namespace BusinessLogic.Services.Test
                     Data = new
                     {
                         test.Id,
-                        test.Name
+                        test.Name,
+                        test.Description,
+                        test.TestImage
                     },
                     Success = true,
                     ErrorMessage = "Test is already Added."
@@ -330,12 +332,26 @@ namespace BusinessLogic.Services.Test
         public async Task<ResultDto> GetAllTestsAsync()
         {
             // Retrieve all tests from the database
-            var tests = await _context.Tests.Select(t => new
+            var testsRaw = await _context.Tests.Select(t => new
             {
                 t.Id,
                 t.Name,
-                t.Questions.Count
+                QuestionCount  =  t.Questions.Count,
+                t.Description,
+                t.TestImage
             }).ToListAsync();
+
+            // Step 2: Convert to DTOs in memory with image type detection
+            var tests = testsRaw.Select(t => new
+            {
+                t.Id,
+                t.Name,
+                t.QuestionCount,
+                t.Description,
+                ImageType = GetImageType(t.TestImage)
+            }).ToList();
+
+
 
             // Return an empty list with a success result if no tests are found
             return tests.Any()
@@ -390,7 +406,29 @@ namespace BusinessLogic.Services.Test
             };
         }
 
+        private string GetImageType(byte[] imageData)
+        {
+            if (imageData == null || imageData.Length < 4)
+                return "unknown";
 
+            // PNG: 89 50 4E 47
+            if (imageData[0] == 0x89 && imageData[1] == 0x50 && imageData[2] == 0x4E && imageData[3] == 0x47)
+                return "png";
+
+            // JPEG: FF D8 FF
+            if (imageData[0] == 0xFF && imageData[1] == 0xD8 && imageData[2] == 0xFF)
+                return "jpg";
+
+            // GIF: 47 49 46
+            if (imageData[0] == 0x47 && imageData[1] == 0x49 && imageData[2] == 0x46)
+                return "gif";
+
+            // BMP: 42 4D
+            if (imageData[0] == 0x42 && imageData[1] == 0x4D)
+                return "bmp";
+
+            return "unknown";
+        }
     }
 
 }
