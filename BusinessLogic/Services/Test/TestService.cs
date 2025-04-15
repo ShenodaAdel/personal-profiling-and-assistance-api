@@ -348,6 +348,7 @@ namespace BusinessLogic.Services.Test
                 t.Name,
                 t.QuestionCount,
                 t.Description,
+                t.TestImage,
                 ImageType = GetImageType(t.TestImage)
             }).ToList();
 
