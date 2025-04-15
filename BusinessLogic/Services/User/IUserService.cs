@@ -13,7 +13,8 @@ namespace BusinessLogic.Services.User
     public interface IUserService
     {
         Task<ResultDto> AddUserAsync(UserAddDto dto); 
-        Task<ResultDto> DeleteUserByIdAsync(string Token);
+        Task<ResultDto> DeleteUserByTokenAsync(string Token);
+        Task<ResultDto> DeleteUserByIdAsync(string userId);
         Task<ResultDto> GetAllUserAsync();
         Task<ResultDto> GetByIdUserAsync(string Token); 
         Task<ResultDto> GetByIdUserDetailsAsync(string id);

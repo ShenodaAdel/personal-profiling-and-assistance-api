@@ -101,7 +101,7 @@ namespace BusinessLogic.Services.User
 
         // End of AddUserAsync method
 
-        public async Task<ResultDto> DeleteUserByIdAsync(string Token)
+        public async Task<ResultDto> DeleteUserByTokenAsync(string Token)
         {
 
             var userId = _tokenService.GetUserIdFromToken(Token);
@@ -466,8 +466,26 @@ namespace BusinessLogic.Services.User
             return parsedJson?.GetValueOrDefault("Key");
         }
 
+        public async Task<ResultDto> DeleteUserByIdAsync(string userId)
+        {
+            var user = await _context.Users.FindAsync(userId);
+            if (user == null)
+            {
+                return new ResultDto
+                {
+                    Success = false,
+                    ErrorMessage = "User not found."
+                };
+            }
+            _context.Users.Remove(user);
+            await _context.SaveChangesAsync();
+            return new ResultDto
+            {
+                Success = true,
+                ErrorMessage = $"User with ID {userId} deleted successfully."
+            };
 
-        
+        }
 
     }
 

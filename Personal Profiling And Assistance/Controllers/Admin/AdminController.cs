@@ -90,7 +90,7 @@ namespace Personal_Profiling_And_Assistance.Controllers.Admin
                 });
             }
             var Token = Authorization.Substring("Bearer ".Length).Trim();
-            var result = await _userService.DeleteUserByIdAsync(Token);
+            var result = await _userService.DeleteUserByTokenAsync(Token);
 
             if (!result.Success)
             {
@@ -121,7 +121,7 @@ namespace Personal_Profiling_And_Assistance.Controllers.Admin
                 }
             }
 
-            var result = await _userService.UpdateUserAsync(Token, dto.UserName,dto.PhoneNumber, dto.Gender, profilePictureBytes); // ✅ Send byte[] instead of IFormFile
+            var result = await _userService.UpdateUserAsync(Token, dto.UserName, dto.PhoneNumber, dto.Gender, profilePictureBytes); // ✅ Send byte[] instead of IFormFile
 
             if (!result.Success)
             {
@@ -140,10 +140,10 @@ namespace Personal_Profiling_And_Assistance.Controllers.Admin
 
                 if (result.Success)
                 {
-                    return Ok(result);  
+                    return Ok(result);
                 }
 
-                return BadRequest(result);  
+                return BadRequest(result);
             }
             catch (Exception ex)
             {
@@ -155,6 +155,16 @@ namespace Personal_Profiling_And_Assistance.Controllers.Admin
             }
         }
 
+        [HttpDelete("DeleteUserById/{userId}")]
+        public async Task<IActionResult> DeleteUserByAdmin(string userId)
+        {
+            var result = await _userService.DeleteUserByIdAsync(userId);
+            if (!result.Success)
+            {
+                return NotFound(result); // Returns 404 if user not found
+            }
+            return Ok(result); // Returns 200 if deletion is successful
 
         }
+    }
 }
