@@ -102,7 +102,7 @@ namespace Personal_Profiling_And_Assistance.Controllers.Admin
 
         [HttpPut("UpdateAdmin")]
         [Authorize]
-        public async Task<IActionResult> UpdateAdmin([FromHeader] string Authorization, [FromForm] UpdateUserDto dto) // ✅ Use [FromForm]
+        public async Task<IActionResult> UpdateAdmin([FromHeader] string Authorization, [FromForm] UpdateUserDto dto) 
         {
             // Validate the Authorization header
             if (string.IsNullOrEmpty(Authorization) || !Authorization.StartsWith("Bearer "))
@@ -117,12 +117,11 @@ namespace Personal_Profiling_And_Assistance.Controllers.Admin
                 using (var memoryStream = new MemoryStream())
                 {
                     await dto.ProfilePicture.CopyToAsync(memoryStream);
-                    profilePictureBytes = memoryStream.ToArray(); // ✅ Convert to byte[]
+                    profilePictureBytes = memoryStream.ToArray(); 
                 }
             }
 
-            var result = await _userService.UpdateUserAsync(Token, dto.UserName, dto.PhoneNumber, dto.Gender, profilePictureBytes); // ✅ Send byte[] instead of IFormFile
-
+            var result = await _userService.UpdateUserAsync(Token, dto.UserName, dto.PhoneNumber, dto.Gender, profilePictureBytes); 
             if (!result.Success)
             {
                 return BadRequest(result);

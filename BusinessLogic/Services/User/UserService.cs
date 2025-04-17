@@ -170,7 +170,7 @@ namespace BusinessLogic.Services.User
                 Data = users,
                 Success = true,
             };
-        }  
+        }
 
         // End of GetAllUserAsync method
         public async Task<ResultDto> GetByIdUserAsync(string token)
@@ -181,15 +181,17 @@ namespace BusinessLogic.Services.User
                 return new ResultDto
                 {
                     Success = false,
-                    ErrorMessage = "Invalid token.",
+                    ErrorMessage = "Invalid token."
                 };
             }
 
             try
             {
-                // Get user from database
+                // Get user ID from token
                 var userId = _tokenService.GetUserIdFromToken(token);
-                var user = await _context.Users
+
+                // First, retrieve the user data without the method calls in the projection
+                var userEntity = await _context.Users
                     .AsNoTracking()
                     .Where(u => u.Id == userId)
                     .Select(u => new
@@ -200,33 +202,51 @@ namespace BusinessLogic.Services.User
                         Phone = u.PhoneNumber,
                         Gender = u.Gender,
                         ProfilePicture = u.ProfilePicture,
-                        Tests = _context.UserTests
-                            .Where(ut => ut.UserId == u.Id)
+                        Tests = u.UserTests
                             .OrderBy(ut => ut.Date)
                             .Select(ut => new
                             {
-                                TestId = ut.TestId,                        
-                                TestName = ut.Test!.Name, // Assuming "Name" exists in the Test entity
+                                TestId = ut.TestId,
+                                TestName = ut.Test.Name,
                                 DateTaken = ut.Date,
-                                Result = ExtractValueFromJsonString(ut.Result)
+                                Result = ut.Result // Get the raw result string
                             })
                             .ToList()
                     })
                     .FirstOrDefaultAsync();
 
-                // Handle not found
-                if (user == null)
+                if (userEntity == null)
                 {
                     return new ResultDto
                     {
                         Success = false,
-                        ErrorMessage = $"User not found."
+                        ErrorMessage = "User not found."
                     };
                 }
+
+                // Process the data after fetching from the database
+                var userDto = new
+                {
+                    userEntity.Id,
+                    userEntity.Name,
+                    userEntity.Email,
+                    userEntity.Phone,
+                    userEntity.Gender,
+                    userEntity.ProfilePicture,
+                    ProfilePictureType = GetImageType(userEntity.ProfilePicture),
+                    Tests = userEntity.Tests.Select(t => new
+                    {
+                        t.TestId,
+                        t.TestName,
+                        t.DateTaken,
+                        Result = ExtractValueFromJsonString(t.Result)
+                    }).ToList()
+                };
+
                 return new ResultDto
                 {
-                    Data = user,
-                    Success = true,
+                    Data = userDto,
+                    Success = true
                 };
             }
             catch (Exception ex)
@@ -235,8 +255,7 @@ namespace BusinessLogic.Services.User
                 return new ResultDto
                 {
                     Success = false,
-                    ErrorMessage = $"An error occurred: {ex.Message}",
-                
+                    ErrorMessage = $"An error occurred: {ex.Message}"
                 };
             }
         }
@@ -502,6 +521,30 @@ namespace BusinessLogic.Services.User
                 };
             }
 
+        }
+
+        private string GetImageType(byte[] imageData)
+        {
+            if (imageData == null || imageData.Length < 4)
+                return "unknown";
+
+            // PNG: 89 50 4E 47
+            if (imageData[0] == 0x89 && imageData[1] == 0x50 && imageData[2] == 0x4E && imageData[3] == 0x47)
+                return "png";
+
+            // JPEG: FF D8 FF
+            if (imageData[0] == 0xFF && imageData[1] == 0xD8 && imageData[2] == 0xFF)
+                return "jpg";
+
+            // GIF: 47 49 46
+            if (imageData[0] == 0x47 && imageData[1] == 0x49 && imageData[2] == 0x46)
+                return "gif";
+
+            // BMP: 42 4D
+            if (imageData[0] == 0x42 && imageData[1] == 0x4D)
+                return "bmp";
+
+            return "unknown";
         }
 
     }
