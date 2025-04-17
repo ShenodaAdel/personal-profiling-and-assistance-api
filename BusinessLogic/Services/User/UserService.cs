@@ -468,7 +468,7 @@ namespace BusinessLogic.Services.User
 
         public async Task<ResultDto> DeleteUserByIdAsync(string userId)
         {
-            var user = await _context.Users.FindAsync(userId);
+            var user = await _context.Users.Include(u => u.UserTests).FirstOrDefaultAsync(u => u.Id == userId);
             if (user == null)
             {
                 return new ResultDto
@@ -477,13 +477,30 @@ namespace BusinessLogic.Services.User
                     ErrorMessage = "User not found."
                 };
             }
-            _context.Users.Remove(user);
-            await _context.SaveChangesAsync();
-            return new ResultDto
+            try
             {
-                Success = true,
-                ErrorMessage = $"User with ID {userId} deleted successfully."
-            };
+                if (user.UserTests != null && user.UserTests.Any())
+                {
+                    _context.UserTests.RemoveRange(user.UserTests);
+                }
+                _context.Users.Remove(user);
+                await _context.SaveChangesAsync();
+
+                return new ResultDto
+                {
+                    Success = true,
+                    ErrorMessage = $"User deleted successfully."
+                };
+            }
+            catch (Exception ex)
+            {
+                // Optionally: log the exception here
+                return new ResultDto
+                {
+                    Success = false,
+                    ErrorMessage = $"Failed to delete user: {ex.Message}"
+                };
+            }
 
         }
 
