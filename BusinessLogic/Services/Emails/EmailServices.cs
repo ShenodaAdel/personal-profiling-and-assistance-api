@@ -16,24 +16,33 @@ namespace BusinessLogic.Services.Emails
 
         public async Task SendEmailAsync(string toEmail, string subject, string body)
         {
-            var smtpClient = new SmtpClient(_emailSettings.Host)
+            try
             {
-                Port = (_emailSettings.Port),
-                Credentials = new NetworkCredential(_emailSettings.Email, _emailSettings.Password),
-                EnableSsl = true
-            };
+                var smtpClient = new SmtpClient(_emailSettings.Host)
+                {
+                    Port = _emailSettings.Port,
+                    Credentials = new NetworkCredential(_emailSettings.Email, _emailSettings.Password),
+                    EnableSsl = true
+                };
 
-            var mailMessage = new MailMessage
+                var mailMessage = new MailMessage
+                {
+                    From = new MailAddress(_emailSettings.Email),
+                    Subject = subject,
+                    Body = body,
+                    IsBodyHtml = false,
+                };
+                mailMessage.To.Add(toEmail);
+
+                await smtpClient.SendMailAsync(mailMessage);
+            }
+            catch (Exception ex)
             {
-                From = new MailAddress(_emailSettings.Email),
-                Subject = subject,
-                Body = body,
-                IsBodyHtml = false,
-            };
-            mailMessage.To.Add(toEmail);
-
-            await smtpClient.SendMailAsync(mailMessage);
+                Console.WriteLine($"❌ Error while sending email: {ex.Message}");
+                throw; 
+            }
         }
+
 
     }
 }

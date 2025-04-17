@@ -23,28 +23,42 @@ namespace BusinessLogic.Services.OTP_Service
 
         public async Task<ResultDto> SendOtpToEmailAsync(string email)
         {
-            var user = await _userManager.FindByEmailAsync(email);
-            if (user == null)
-                return new ResultDto { Success = false, ErrorMessage = "User not found." };
-
-            // Generate OTP
-            var code = new Random().Next(100000, 999999).ToString();
-
-            var otp = new OtpCode
+            try
             {
-                UserId = user.Id,
-                Code = code,
-                ExpirationTime = DateTime.UtcNow.AddMinutes(10)
-            };
+                if (string.IsNullOrWhiteSpace(email))
+                    return new ResultDto { Success = false, ErrorMessage = "Email is required." };
 
-            _context.OtpCodes.Add(otp);
-            await _context.SaveChangesAsync();
+                var user = await _userManager.FindByEmailAsync(email);
+                if (user == null)
+                    return new ResultDto { Success = false, ErrorMessage = "User not found." };
 
-            await _emailServices.SendEmailAsync(email, "Your OTP Code", $"Your OTP code is: {code}");
+                // Generate OTP
+                var code = new Random().Next(100000, 999999).ToString();
 
-            return new ResultDto { Success = true, ErrorMessage = "OTP sent to your email." };
+                var otp = new OtpCode
+                {
+                    UserId = user.Id,
+                    Code = code,
+                    ExpirationTime = DateTime.UtcNow.AddMinutes(10)
+                };
+
+                _context.OtpCodes.Add(otp);
+                await _context.SaveChangesAsync();
+
+                await _emailServices.SendEmailAsync(email, "Your OTP Code", $"Your OTP code is: {code}");
+
+                return new ResultDto { Success = true, ErrorMessage = "OTP sent to your email." };
+            }
+            catch (Exception ex)
+            {
+                // يفضل استخدام logging هنا كمان
+                return new ResultDto
+                {
+                    Success = false,
+                    ErrorMessage = $"Server error: {ex.Message}"
+                };
+            }
         }
-
         public async Task<ResultDto> VerifyOtpAndResetPasswordAsync(string email, string code, string newPassword)
         {
             var user = await _userManager.FindByEmailAsync(email);
