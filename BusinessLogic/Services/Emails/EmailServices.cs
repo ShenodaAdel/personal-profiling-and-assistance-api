@@ -1,8 +1,7 @@
 ﻿using Microsoft.Extensions.Options;
-using MimeKit;
-using MailKit.Net.Smtp;
-using MailKit.Security;
 using BusinessLogic.Services.Emails.Dtos;
+using System.Net.Mail;
+using System.Net;
 
 namespace BusinessLogic.Services.Emails
 {
@@ -15,32 +14,25 @@ namespace BusinessLogic.Services.Emails
             _emailSettings = emailSettings.Value;
         }
 
-        public async Task SendResetPasswordEmailAsync(string toEmail, string resetLink)
+        public async Task SendEmailAsync(string toEmail, string subject, string body)
         {
-            var email = new MimeMessage 
-            { 
-                Sender = MailboxAddress.Parse(_emailSettings.Email), // Sender can send email 
-                Subject = "Reset Password",
-            };
-            email.To.Add(MailboxAddress.Parse(toEmail)); // recived email 
-
-            var builder = new BodyBuilder();
-
-            if (!string.IsNullOrEmpty(resetLink))
+            var smtpClient = new SmtpClient(_emailSettings.Host)
             {
-                // The reset link to be used by the user to reset their password
-                builder.HtmlBody = $"<p>Please click the link below to reset your password:</p><a href='{resetLink}'>Reset Password</a>";
-            }
+                Port = (_emailSettings.Port),
+                Credentials = new NetworkCredential(_emailSettings.Email, _emailSettings.Password),
+                EnableSsl = true
+            };
 
-            email.Body = builder.ToMessageBody();
-            email.From.Add(new MailboxAddress(_emailSettings.DisplayName, _emailSettings.Email)); // Email header 
+            var mailMessage = new MailMessage
+            {
+                From = new MailAddress(_emailSettings.Email),
+                Subject = subject,
+                Body = body,
+                IsBodyHtml = false,
+            };
+            mailMessage.To.Add(toEmail);
 
-            using var smtp = new SmtpClient();
-            smtp.Connect(_emailSettings.Host, _emailSettings.Port, SecureSocketOptions.StartTls);
-            smtp.Authenticate(_emailSettings.Email, "@shenoda11"); // Authentication
-            await smtp.SendAsync(email);
-
-            smtp.Disconnect(true);
+            await smtpClient.SendMailAsync(mailMessage);
         }
 
     }

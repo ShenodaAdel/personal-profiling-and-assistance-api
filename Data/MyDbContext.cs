@@ -27,5 +27,7 @@ namespace Data
 
         public DbSet<QuestionChoice> QuestionChoices { get; set; }
 
+        public DbSet<OtpCode> OtpCodes { get; set; }
+
     }
 }

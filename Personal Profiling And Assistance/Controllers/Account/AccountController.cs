@@ -1,5 +1,6 @@
 ﻿using BusinessLogic.Services.Auth;
 using BusinessLogic.Services.Auth.Dtos;
+using BusinessLogic.Services.OTP_Service;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -12,10 +13,12 @@ namespace Personal_Profiling_And_Assistance.Controllers.Account
     {
         private readonly IAuthService _authService;
         private readonly RoleManager<IdentityRole> _roleManager;
-        public AccountController(IAuthService authService, RoleManager<IdentityRole> roleManager)
+        private readonly IOTPService _oTPService;
+        public AccountController(IAuthService authService, RoleManager<IdentityRole> roleManager, IOTPService oTPService)
         {
             _authService = authService;
             _roleManager = roleManager;
+            _oTPService = oTPService;
         }
 
         [HttpPost("register")]
@@ -67,35 +70,20 @@ namespace Personal_Profiling_And_Assistance.Controllers.Account
             return Ok(result);
         }
 
-        [HttpPost("ForgotPassword")]
-        public async Task<IActionResult> ForgotPassword([FromBody] ForgetPasswordDto dto)
+        [HttpPost("send-otp")]
+        public async Task<IActionResult> SendOtp([FromBody] string email)
         {
-            var result = await _authService.ForgotPasswordAsync(dto);
-
-            if (result.Success)
-            {
-                return Ok(result);
-            }
-            else
-            {
-                return BadRequest(result);
-            }
+            var result = await _oTPService.SendOtpToEmailAsync(email);
+            return Ok(result);
         }
 
-        [HttpPost("ResetPassword")]
+        [HttpPost("reset-password")]
         public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordDto dto)
         {
-            var result = await _authService.ResetPasswordAsync(dto);
-
-            if (result.Success)
-            {
-                return Ok(result); // Success response
-            }
-            else
-            {
-                return BadRequest(result); // Error response with message
-            }
+            var result = await _oTPService.VerifyOtpAndResetPasswordAsync(dto.Email, dto.OtpCode, dto.NewPassword);
+            return Ok(result);
         }
+
 
         //[HttpGet("CreateRoles")]
         //public async Task<IActionResult> CreateRoles()
