@@ -29,5 +29,7 @@ namespace Data
 
         public DbSet<OtpCode> OtpCodes { get; set; }
 
+        public DbSet<ContactUs> Contactus { get; set; }
+
     }
 }

@@ -16,6 +16,7 @@ using Microsoft.EntityFrameworkCore;
 using System;
 using BusinessLogic.Services.TokenService;
 using BusinessLogic.Services.OTP_Service;
+using BusinessLogic.Services.ContactUsService;
 
 var builder = WebApplication.CreateBuilder(args); 
 
@@ -35,6 +36,7 @@ builder.Services.AddScoped<IQuestionChoiceService, QuestionChoiceService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ITokenService,TokenService>();
 builder.Services.AddScoped<IOTPService, OTPService>();
+builder.Services.AddScoped<IContactUsService, ContactUsService>();
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAngularApp", policy =>
