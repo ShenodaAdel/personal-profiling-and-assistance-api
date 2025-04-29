@@ -26,6 +26,6 @@ namespace Data.Models
         [Column(TypeName = "nvarchar(max)")]
         public string? Problem { get; set; }
 
-        public bool IsRead { get; set; }
+        public int IsRead { get; set; }
     }
 }

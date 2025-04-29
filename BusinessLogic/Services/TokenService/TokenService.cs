@@ -19,20 +19,22 @@ namespace BusinessLogic.Services.TokenService
                 if (string.IsNullOrWhiteSpace(token))
                     throw new ArgumentException("Token is null or empty.");
 
-                // Step 1: Create a JWT Security Token Handler
+                // Create a JWT Security Token Handler
                 var handler = new JwtSecurityTokenHandler();
 
-                // Step 2: Parse the JWT Token
+                if (!handler.CanReadToken(token))
+                    throw new ArgumentException("The token is not in a valid JWT format.");
                 var jsonToken = handler.ReadToken(token) as JwtSecurityToken;
+
                 if (jsonToken == null)
                     throw new ArgumentException("Invalid token.");
 
-                // Step 3: Extract user ID claim (sub) or (userId)
-                var userIdClaim = jsonToken?.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Sub || c.Type == "userId");
+                // Extract user ID claim (sub) or (userId)
+                var userIdClaim = jsonToken.Claims.FirstOrDefault(c =>
+                    c.Type == JwtRegisteredClaimNames.Sub || c.Type.Equals("userId", StringComparison.OrdinalIgnoreCase));
 
-                if (userIdClaim == null)
-                    throw new ArgumentException("UserId claim not found in the token.");
-
+                if (userIdClaim == null || string.IsNullOrWhiteSpace(userIdClaim.Value))
+                    throw new InvalidOperationException("User ID claim not found in the token.");
 
                 return userIdClaim.Value;
             }

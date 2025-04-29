@@ -42,7 +42,7 @@ namespace BusinessLogic.Services.ContactUsService
                     Phone = dto.Phone,
                     Date = DateTime.UtcNow,
                     Problem = dto.Problem,
-                    IsRead = false
+                    IsRead = 0
                 };
                 await _context.Contactus.AddAsync(contactUs);
                 await _context.SaveChangesAsync();
@@ -60,7 +60,7 @@ namespace BusinessLogic.Services.ContactUsService
             try
             {
                 var unreadContacts = await _context.Contactus
-                    .Where(c => c.IsRead == false)
+                    .Where(c => c.IsRead == 0)
                     .OrderByDescending(c => c.Date)  // Most recent first 
                     .ToListAsync();
 
@@ -97,7 +97,7 @@ namespace BusinessLogic.Services.ContactUsService
             try
             {
                 int unreadCount = await _context.Contactus
-                    .CountAsync(c => c.IsRead == false);
+                    .CountAsync(c => c.IsRead == 0);
 
                 return unreadCount;
             }
@@ -116,7 +116,7 @@ namespace BusinessLogic.Services.ContactUsService
                 if (contactUs == null)
                     return "لم يتم العثور على المشكلة.";
 
-                contactUs.IsRead = true;
+                contactUs.IsRead = 1;
                 await _context.SaveChangesAsync();
 
                 return "تمت قراءة الرسالة بنجاح.";
@@ -147,7 +147,7 @@ namespace BusinessLogic.Services.ContactUsService
                 await _emailServices.SendEmailAsync(contactUs.Email, subject, body);
 
                 // Optionally, mark it as read after answering
-                contactUs.IsRead = true;
+                contactUs.IsRead = 1;
                 await _context.SaveChangesAsync();
 
                 return "تم إرسال الرد بنجاح إلى البريد الإلكتروني.";
