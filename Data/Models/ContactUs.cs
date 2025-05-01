@@ -20,7 +20,7 @@ namespace Data.Models
         [Column(TypeName = "nvarchar(15)")]
         public string? Phone { get; set; }
         
-        [Required]
+        [Required] 
         public DateTime Date { get; set; }
 
         [Column(TypeName = "nvarchar(max)")]

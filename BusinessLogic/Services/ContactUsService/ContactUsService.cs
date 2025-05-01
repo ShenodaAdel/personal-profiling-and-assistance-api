@@ -59,12 +59,15 @@ namespace BusinessLogic.Services.ContactUsService
         {
             try
             {
-                var unreadContacts = await _context.Contactus
-                    .Where(c => c.IsRead == 0)
-                    .OrderByDescending(c => c.Date)  // Most recent first 
+                var unreadContacts = await _context.Contactus 
+                    .Where(c => c.IsRead == 0)  
+                    .OrderByDescending(c => c.Date)  // Most recent first  
                     .ToListAsync();
 
-                return unreadContacts;
+                var unreadCount = await _context.Contactus 
+                    .CountAsync(c => c.IsRead == 0); 
+
+                return unreadContacts; 
             }
             catch (Exception ex)
             {
