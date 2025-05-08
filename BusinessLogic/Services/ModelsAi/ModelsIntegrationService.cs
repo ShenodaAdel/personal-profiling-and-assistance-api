@@ -48,7 +48,7 @@ namespace BusinessLogic.Services.ModelsAi
             }
         }
 
-        public async Task<string> AnalyzeImageAsync(ModelDto dto)
+        public async Task<string> AnalyzeImageAsync(ModelImageDto dto)
         {
             if (dto.Image == null || dto.Image.Length == 0)
                 throw new ArgumentException("Image file is required.");
@@ -62,12 +62,14 @@ namespace BusinessLogic.Services.ModelsAi
             try
             {
                 using var form = new MultipartFormDataContent();
-                form.Add(new StreamContent(System.IO.File.OpenRead(tempFilePath)), "file", "image.jpg");
+                form.Add(new StreamContent(System.IO.File.OpenRead(tempFilePath)), "image", "photo.jpg");
 
-                var response = await _httpClient.PostAsync("http://192.168.1.25:5000/predict_emotion", form); // عدّل الرابط حسب API
+                var response = await _httpClient.PostAsync("http://127.0.0.1:5000/predict_emotion", form);
                 response.EnsureSuccessStatusCode();
 
                 var json = await response.Content.ReadAsStringAsync();
+
+
                 return json;
             }
             finally
@@ -75,6 +77,7 @@ namespace BusinessLogic.Services.ModelsAi
                 System.IO.File.Delete(tempFilePath);
             }
         }
+
 
 
     }

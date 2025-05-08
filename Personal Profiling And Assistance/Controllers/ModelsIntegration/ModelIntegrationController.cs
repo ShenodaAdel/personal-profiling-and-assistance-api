@@ -2,6 +2,7 @@
 using BusinessLogic.Services.ModelsAi.Dtos;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace Personal_Profiling_And_Assistance.Controllers.ModelsIntegration
 {
@@ -23,14 +24,12 @@ namespace Personal_Profiling_And_Assistance.Controllers.ModelsIntegration
             return Ok(result);
         }
         [HttpPost("analyze-image")]
-        public async Task<IActionResult> AnalyzeImage([FromForm] ModelDto dto )
+        public async Task<IActionResult> AnalyzeImage([FromForm] ModelImageDto dto )
         {
             try
             {
-                if (dto == null || dto.Image.Length == 0)
-                    return BadRequest("Image file is required.");
-                var result = await _modelsIntegration.AnalyzeImageAsync(dto);
-                return Ok(result);
+                var emotion = await _modelsIntegration.AnalyzeImageAsync(dto);
+                return Ok(emotion);
             }
             catch (Exception ex)
             {
