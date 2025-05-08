@@ -36,11 +36,11 @@ namespace BusinessLogic.Services.ModelsAi
                 response.EnsureSuccessStatusCode();
 
                 var json = await response.Content.ReadAsStringAsync();
-                var result = JsonSerializer.Deserialize<ResponseVoiceModel>(json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                //var result = JsonSerializer.Deserialize<ResponseVoiceModel>(json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
 
-                var emotion = result?.KeyVoice ?? "Unknown";
+                //var emotion = result?.KeyVoice ?? "Unknown";
 
-                return emotion;
+                return json;
             }
             finally
             {
