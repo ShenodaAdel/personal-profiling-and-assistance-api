@@ -47,7 +47,37 @@ namespace BusinessLogic.Services.ModelsAi
                 System.IO.File.Delete(tempFilePath);
             }
         }
+
+        public async Task<string> AnalyzeImageAsync(ModelDto dto)
+        {
+            if (dto.Image == null || dto.Image.Length == 0)
+                throw new ArgumentException("Image file is required.");
+
+            var tempFilePath = Path.GetTempFileName();
+            using (var stream = System.IO.File.Create(tempFilePath))
+            {
+                await dto.Image.CopyToAsync(stream);
+            }
+
+            try
+            {
+                using var form = new MultipartFormDataContent();
+                form.Add(new StreamContent(System.IO.File.OpenRead(tempFilePath)), "file", "image.jpg");
+
+                var response = await _httpClient.PostAsync("http://127.0.0.1:5000/predict_emotion", form); // عدّل الرابط حسب API
+                response.EnsureSuccessStatusCode();
+
+                var json = await response.Content.ReadAsStringAsync();
+                return json;
+            }
+            finally
+            {
+                System.IO.File.Delete(tempFilePath);
+            }
+        }
+
+
     }
-    
-    
+
+
 }

@@ -5,5 +5,6 @@ namespace BusinessLogic.Services.ModelsAi
     public interface IModelsIntegration
     {
         Task<string> AnalyzeAudioAsync(ModelDto dto);
+        Task<string> AnalyzeImageAsync(ModelDto dto);
     }
 }

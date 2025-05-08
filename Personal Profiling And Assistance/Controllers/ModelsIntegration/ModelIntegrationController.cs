@@ -22,5 +22,21 @@ namespace Personal_Profiling_And_Assistance.Controllers.ModelsIntegration
             var result = await _modelsIntegration.AnalyzeAudioAsync(dto);
             return Ok(result);
         }
+        [HttpPost("analyze-image")]
+        public async Task<IActionResult> AnalyzeImage([FromForm] ModelDto dto )
+        {
+            try
+            {
+                if (dto == null || dto.Image.Length == 0)
+                    return BadRequest("Image file is required.");
+                var result = await _modelsIntegration.AnalyzeImageAsync(dto);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
+        }
+
     }
 }
