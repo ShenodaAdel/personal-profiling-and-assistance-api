@@ -64,7 +64,7 @@ namespace BusinessLogic.Services.ModelsAi
                 using var form = new MultipartFormDataContent();
                 form.Add(new StreamContent(System.IO.File.OpenRead(tempFilePath)), "file", "image.jpg");
 
-                var response = await _httpClient.PostAsync("http://127.0.0.1:5000/predict_emotion", form); // عدّل الرابط حسب API
+                var response = await _httpClient.PostAsync("http://192.168.1.25:5000/predict_emotion", form); // عدّل الرابط حسب API
                 response.EnsureSuccessStatusCode();
 
                 var json = await response.Content.ReadAsStringAsync();
