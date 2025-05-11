@@ -131,10 +131,14 @@ namespace BusinessLogic.Services.Test
 
         public async Task<ResultDto> DeleteTestAsync(int id)
         {
-            // Find the test by Id
-            var test = await _context.Tests.FindAsync(id);
+            // Load test with related Questions and UserTests
+            var test = await _context.Tests
+                .Include(t => t.Questions)
+                        .ThenInclude(q => q.QuestionChoices)
+                .Include(t => t.UserTests) // Adjust name as needed
+                .FirstOrDefaultAsync(t => t.Id == id);
 
-            // If the test doesn't exist, return an error
+            // If the test doesn't exist
             if (test == null)
             {
                 return new ResultDto
@@ -146,13 +150,32 @@ namespace BusinessLogic.Services.Test
 
             try
             {
-                // Remove the test from the context
+                foreach (var question in test.Questions)
+                {
+                    if (question.QuestionChoices != null && question.QuestionChoices.Any())
+                    {
+                        _context.QuestionChoices.RemoveRange(question.QuestionChoices);
+                    }
+                }
+
+                // Remove related UserTests
+                if (test.UserTests != null && test.UserTests.Any())
+                {
+                    _context.UserTests.RemoveRange(test.UserTests);
+                }
+
+                // Remove related Questions
+                if (test.Questions != null && test.Questions.Any())
+                {
+                    _context.Questions.RemoveRange(test.Questions);
+                }
+
+                // Remove the test itself
                 _context.Tests.Remove(test);
 
-                // Save changes to the database
+                // Save changes
                 int saveResult = await _context.SaveChangesAsync();
 
-                // If deletion is successful
                 if (saveResult > 0)
                 {
                     return new ResultDto
@@ -177,10 +200,11 @@ namespace BusinessLogic.Services.Test
                 return new ResultDto
                 {
                     Success = false,
-                    ErrorMessage = ex.Message
+                    ErrorMessage = ex.InnerException?.Message ?? ex.Message
                 };
             }
         }
+
 
         // End of DeleteTestAsync method
 
