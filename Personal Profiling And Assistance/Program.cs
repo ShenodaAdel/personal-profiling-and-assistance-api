@@ -17,6 +17,7 @@ using System;
 using BusinessLogic.Services.TokenService;
 using BusinessLogic.Services.OTP_Service;
 using BusinessLogic.Services.ContactUsService;
+using BusinessLogic.Services.ModelsAi;
 
 var builder = WebApplication.CreateBuilder(args); 
 
@@ -37,11 +38,14 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ITokenService,TokenService>();
 builder.Services.AddScoped<IOTPService, OTPService>();
 builder.Services.AddScoped<IContactUsService, ContactUsService>();
+builder.Services.AddScoped<IModelsIntegration, ModelsIntegrationService>();
+builder.Services.AddHttpClient<IModelsIntegration, ModelsIntegrationService>();
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAngularApp", policy =>
     {
-        policy.WithOrigins("http://localhost:4200") // Angular's local dev URL (or the deployed URL)
+        policy.WithOrigins("http://localhost:4200" , "https://localhost:4200") // Angular's local dev URL (or the deployed URL)
               .AllowAnyMethod()
               .AllowAnyHeader()
               .SetIsOriginAllowed((origin) => true) 
@@ -76,7 +80,7 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 builder.Services.AddCustomJwtAuth(builder.Configuration);
-
+    
 
 var app = builder.Build();
 // Configure the HTTP request pipeline.
@@ -86,7 +90,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
+// app.UseHttpsRedirection();
 
 app.UseCors("AllowAngularApp"); // Apply the CORS policy
 app.UseAuthentication();

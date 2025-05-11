@@ -133,7 +133,7 @@ namespace BusinessLogic.Services.ContactUsService
         public async Task<string> AnswerContactUsAsync(int id, string adminAnswer)
         {
             try
-            {
+                {
                 var contactUs = await _context.Contactus.FirstOrDefaultAsync(c => c.Id == id);
 
                 if (contactUs == null)
