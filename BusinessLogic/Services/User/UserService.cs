@@ -480,10 +480,18 @@ namespace BusinessLogic.Services.User
 
         public static string ExtractValueFromJsonString(string input)
         {
-            var jsonString = $"{{\"Key\":\"{input.Replace("Key:", "").Trim()}\"}}";
-            var parsedJson = JsonConvert.DeserializeObject<Dictionary<string, string>>(jsonString);
-            return parsedJson?.GetValueOrDefault("Key");
+            if (string.IsNullOrWhiteSpace(input))
+                return string.Empty;
+
+            if (input.StartsWith("key:", StringComparison.OrdinalIgnoreCase))
+            {
+                return input.Replace("key:", "", StringComparison.OrdinalIgnoreCase).Trim();
+            }
+
+            return input.Trim(); // لو مفيش key: رجع النص كما هو بعد إزالة المسافات
         }
+
+
 
         public async Task<ResultDto> DeleteUserByIdAsync(string userId)
         {
