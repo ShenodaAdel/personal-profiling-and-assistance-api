@@ -366,7 +366,7 @@ namespace BusinessLogic.Services.Question
                 };
             }
 
-            if (dto.Choices == null || dto.Choices.Count < 3 )
+            if (dto.Choices == null )
             {
                 return new ResultDto
                 {
