@@ -483,13 +483,17 @@ namespace BusinessLogic.Services.User
             if (string.IsNullOrWhiteSpace(input))
                 return string.Empty;
 
-            if (input.StartsWith("key:", StringComparison.OrdinalIgnoreCase))
+            var labels = new[] { "طبيعي", "خفيف", "متوسط", "شديد" };
+
+            foreach (var label in labels)
             {
-                return input.Replace("key:", "", StringComparison.OrdinalIgnoreCase).Trim();
+                if (input.Contains(label))
+                    return label;
             }
 
-            return input.Trim(); // لو مفيش key: رجع النص كما هو بعد إزالة المسافات
+            return string.Empty; // لو مفيش ولا واحدة من الكلمات دي
         }
+
 
 
 
